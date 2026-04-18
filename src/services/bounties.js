@@ -14,16 +14,38 @@ import { db } from "../lib/firebase";
 
 const COLLECTION = "bounties";
 
-export const THEMES = ["Canteen", "Energy", "Waste", "Transport", "Campus"];
+export const THEMES = ["canteen", "energy", "waste", "general"];
 export const SDGS = [
-  { number: 11, label: "Sustainable Cities and Communities" },
-  { number: 12, label: "Responsible Consumption and Production" },
-  { number: 13, label: "Climate Action" },
+  { number: 11, label: "SDG 11 - Sustainable Cities and Communities" },
+  { number: 12, label: "SDG 12 - Responsible Consumption and Production" },
+  { number: 13, label: "SDG 13 - Climate Action" },
 ];
+
+function normalizeTheme(theme) {
+  const normalized = String(theme || "").trim().toLowerCase();
+  return THEMES.includes(normalized) ? normalized : "general";
+}
+
+function normalizeExpiresAt(expiresAt) {
+  if (!expiresAt) {
+    throw new Error("expiresAt is required");
+  }
+  const parsed = new Date(expiresAt);
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error("Invalid expiresAt value");
+  }
+  return parsed.toISOString();
+}
+
+function mapBounty(docSnap) {
+  const data = docSnap.data();
+  return { id: docSnap.id, ...data };
+}
 
 export async function createBounty({
   title,
   description,
+  instructions = "",
   theme,
   sdgNumber,
   coinsReward,
@@ -32,19 +54,25 @@ export async function createBounty({
 }) {
   const sdg = SDGS.find((s) => s.number === sdgNumber);
   if (!sdg) throw new Error(`Invalid SDG number: ${sdgNumber}`);
+  const createdAt = new Date().toISOString();
 
   const ref = await addDoc(collection(db, COLLECTION), {
-    title,
-    description,
-    theme,
+    title: String(title || "").trim(),
+    description: String(description || "").trim(),
+    instructions: String(instructions || "").trim(),
+    theme: normalizeTheme(theme),
     sdgNumber,
+    sdgTag: sdgNumber,
     sdgLabel: sdg.label,
+    coinReward: coinsReward,
     coinsReward,
-    expiresAt,
-    aiVerificationHint,
+    expiresAt: normalizeExpiresAt(expiresAt),
+    aiVerificationHint: String(aiVerificationHint || "").trim(),
+    mediaType: "photo",
     isActive: true,
-    createdAt: new Date().toISOString(),
+    createdAt,
     submissionCount: 0,
+    claimCount: 0,
   });
 
   return ref.id;
@@ -67,7 +95,7 @@ export async function getBounty(bountyId) {
   const ref = doc(db, COLLECTION, bountyId);
   const snap = await getDoc(ref);
   if (!snap.exists()) throw new Error("Bounty not found");
-  return { id: snap.id, ...snap.data() };
+  return mapBounty(snap);
 }
 
 export async function getActiveBounties() {
@@ -77,7 +105,10 @@ export async function getActiveBounties() {
     orderBy("createdAt", "desc")
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const now = Date.now();
+  return snap.docs
+    .map(mapBounty)
+    .filter((bounty) => new Date(bounty.expiresAt).getTime() > now);
 }
 
 export function subscribeToBountyFeed(callback) {
@@ -88,10 +119,10 @@ export function subscribeToBountyFeed(callback) {
   );
 
   return onSnapshot(q, (snap) => {
-    const now = new Date();
+    const now = Date.now();
     const bounties = snap.docs
-      .map((d) => ({ id: d.id, ...d.data() }))
-      .filter((b) => new Date(b.expiresAt) > now);
+      .map(mapBounty)
+      .filter((b) => new Date(b.expiresAt).getTime() > now);
 
     const grouped = bounties.reduce((acc, bounty) => {
       if (!acc[bounty.theme]) acc[bounty.theme] = [];
@@ -109,7 +140,7 @@ export function subscribeToAllBounties(callback) {
     orderBy("createdAt", "desc")
   );
   return onSnapshot(q, (snap) => {
-    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    callback(snap.docs.map(mapBounty));
   });
 }
 
