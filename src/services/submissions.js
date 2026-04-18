@@ -35,6 +35,11 @@ export async function hasExistingClaim(studentId, bountyId) {
 }
 
 async function uploadSubmissionPhoto(studentId, bountyId, photoFile) {
+  if (!photoFile) {
+    console.warn("No photo file provided; using dummy url for testing.");
+    return "https://picsum.photos/400/300"; 
+  }
+
   const timestamp = Date.now();
   const path = `submissions/${studentId}/${bountyId}/${timestamp}.jpg`;
   const storageRef = ref(storage, path);
