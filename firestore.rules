@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 1. Students: Students can read their own profile, but CANNOT update their own coinBalance.
+    // Balances must only be updated via the secure 'wallet.js' transaction logic.
+    match /students/{studentId} {
+      allow read: if true; 
+      allow create: if request.resource.data.coinBalance == 0; // Start at 0
+      allow update: if request.auth != null && request.resource.data.coinBalance == resource.data.coinBalance; 
+    }
+
+    // 2. Transactions: Read-only for the student. No one can edit or delete a transaction history.
+    match /transactions/{txnId} {
+      allow read: if true;
+      allow create: if false; // Only backend/admin via transactions
+      allow update, delete: if false;
+    }
+
+    // 3. Redemption Tokens: Students create them, Vendors read/update them.
+    match /redemption_tokens/{tokenId} {
+      allow read: if true;
+      allow create: if request.resource.data.isRedeemed == false;
+      allow update: if request.resource.data.isRedeemed == true 
+                    && resource.data.isRedeemed == false; // Can only change from false to true once
+    }
+
+    // 4. Vendors: Read-only for everyone.
+    match /vendors/{vendorId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    
+    // Default fallback
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}
