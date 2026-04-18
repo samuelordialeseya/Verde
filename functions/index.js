@@ -30,7 +30,10 @@ exports.verifyEcoAction = onCall(
       throw new HttpsError("internal", `Image fetch failed: ${err.message}`);
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-pro",
+      generationConfig: { responseMimeType: "application/json" }
+    });
 
     const prompt = buildVerificationPrompt(bountyTitle, bountyDescription, bountyInstructions, aiVerificationHint);
 
@@ -89,12 +92,7 @@ Verdict definitions:
 
 function parseGeminiResponse(rawText) {
   try {
-    const cleaned = rawText
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
-
-    const parsed = JSON.parse(cleaned);
+    const parsed = JSON.parse(rawText.trim());
 
     return {
       verdict: ["approved", "rejected", "flagged"].includes(parsed.verdict) ? parsed.verdict : "flagged",
