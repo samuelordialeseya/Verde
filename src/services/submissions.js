@@ -24,9 +24,6 @@ export const VERDICT = {
   FLAGGED: "flagged",
 };
 
-const AUTO_APPROVE_THRESHOLD = 0.75;
-const AUTO_REJECT_THRESHOLD = 0.40;
-
 export async function hasExistingClaim(studentId, bountyId) {
   const q = query(
     collection(db, CLAIMS_COLLECTION),
@@ -46,12 +43,15 @@ async function uploadSubmissionPhoto(studentId, bountyId, photoFile) {
   return await getDownloadURL(storageRef);
 }
 
-async function callGeminiVerification(photoUrl, aiVerificationHint) {
+async function callGeminiVerification(photoUrl, bounty) {
   const verifyFn = httpsCallable(functions, "verifyEcoAction");
 
   const result = await verifyFn({
     photoUrl,
-    hint: aiVerificationHint,
+    bountyTitle: bounty.title,
+    bountyDescription: bounty.description,
+    bountyInstructions: bounty.instructions,
+    aiVerificationHint: bounty.aiVerificationHint,
   });
 
   return result.data;
@@ -82,6 +82,8 @@ export async function submitBountyProof(studentId, bountyId, photoFile) {
     verdict: "pending",
     confidence: null,
     reason: null,
+    isSuspicious: false,
+    missingElements: [],
     submittedAt: new Date().toISOString(),
     reviewedAt: null,
   });
@@ -90,27 +92,25 @@ export async function submitBountyProof(studentId, bountyId, photoFile) {
 
   let geminiResult;
   try {
-    geminiResult = await callGeminiVerification(photoUrl, bounty.aiVerificationHint);
+    geminiResult = await callGeminiVerification(photoUrl, bounty);
   } catch (err) {
-    await updateDoc(submissionRef, { verdict: VERDICT.FLAGGED, reason: "AI verification failed" });
+    await updateDoc(submissionRef, { 
+      verdict: VERDICT.FLAGGED, 
+      reason: "AI verification failed",
+      isSuspicious: false,
+      missingElements: []
+    });
     return { submissionId, verdict: VERDICT.FLAGGED, confidence: null, reason: "AI verification failed" };
   }
 
-  const { approved, confidence, reason } = geminiResult;
-
-  let verdict;
-  if (approved && confidence >= AUTO_APPROVE_THRESHOLD) {
-    verdict = VERDICT.APPROVED;
-  } else if (!approved && confidence >= AUTO_REJECT_THRESHOLD) {
-    verdict = VERDICT.REJECTED;
-  } else {
-    verdict = VERDICT.FLAGGED;
-  }
+  const { verdict, confidence, reason, isSuspicious, missingElements } = geminiResult;
 
   await updateDoc(submissionRef, {
     verdict,
     confidence,
     reason,
+    isSuspicious,
+    missingElements,
     coinsAwarded: verdict === VERDICT.APPROVED ? bounty.coinsReward : 0,
     reviewedAt: new Date().toISOString(),
   });
