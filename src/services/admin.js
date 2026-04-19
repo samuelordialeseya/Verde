@@ -65,6 +65,35 @@ export function subscribeToSDGBreakdown(callback) {
   });
 }
 
+export function subscribeToAllTimeStats(callback) {
+  const q = query(
+    collection(db, SUBMISSIONS),
+    where("verdict", "==", "approved")
+  );
+
+  return onSnapshot(q, async (snap) => {
+    const submissions = snap.docs.map((d) => d.data());
+    
+    const totalActions = submissions.length;
+    const uniqueStudents = new Set(submissions.map((s) => s.studentId)).size;
+    
+    // Calculate most completed bounty
+    const bountyCounts = {};
+    submissions.forEach(s => {
+      bountyCounts[s.bountyTitle] = (bountyCounts[s.bountyTitle] || 0) + 1;
+    });
+    
+    const mostPopular = Object.entries(bountyCounts)
+      .sort((a, b) => b[1] - a[1])[0]?.[0] || "None yet";
+
+    callback({ 
+      totalActions, 
+      uniqueStudents, 
+      mostPopular 
+    });
+  });
+}
+
 export function subscribeToLeaderboard(callback, topN = 10) {
   const q = query(
     collection(db, STUDENTS),
