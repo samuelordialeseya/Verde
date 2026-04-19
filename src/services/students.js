@@ -81,3 +81,16 @@ export async function updateStudentBalance(studentId, newBalance, totalEarned) {
     totalEarned,
   });
 }
+
+import { collection, query, orderBy, limit } from "firebase/firestore";
+
+export function subscribeToLeaderboard(limitCount = 10, callback) {
+  const q = query(
+    collection(db, COLLECTION),
+    orderBy("totalEarned", "desc"),
+    limit(limitCount)
+  );
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map(doc => doc.data()));
+  });
+}
