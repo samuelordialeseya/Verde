@@ -26,7 +26,7 @@ const FILIPINO_NAMES = [
 const TARGETS = {
   students: 50,
   approvedSubmissions: 200,
-  sdg: { 12: 100, 11: 65, 13: 35 },
+  sdg: { 12: 100, 11: 40, 13: 60 },
 };
 
 const BOUNTIES = [

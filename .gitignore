@@ -26,4 +26,6 @@ dist-ssr
 # Ensure API keys are NOT tracked
 .env
 .env.local
-.env.*.local
+# Firebase Keys
+scripts/serviceAccountKey.json
+serviceAccountKey.json
