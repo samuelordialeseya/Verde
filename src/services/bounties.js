@@ -99,30 +99,32 @@ export async function getBounty(bountyId) {
 }
 
 export async function getActiveBounties() {
+  // No orderBy to avoid requiring a composite index in Firestore
   const q = query(
     collection(db, COLLECTION),
-    where("isActive", "==", true),
-    orderBy("createdAt", "desc")
+    where("isActive", "==", true)
   );
   const snap = await getDocs(q);
   const now = Date.now();
   return snap.docs
     .map(mapBounty)
-    .filter((bounty) => new Date(bounty.expiresAt).getTime() > now);
+    .filter((bounty) => new Date(bounty.expiresAt).getTime() > now)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
 export function subscribeToBountyFeed(callback) {
+  // No orderBy to avoid requiring a composite index — sort client-side instead
   const q = query(
     collection(db, COLLECTION),
-    where("isActive", "==", true),
-    orderBy("createdAt", "desc")
+    where("isActive", "==", true)
   );
 
   return onSnapshot(q, (snap) => {
     const now = Date.now();
     const bounties = snap.docs
       .map(mapBounty)
-      .filter((b) => new Date(b.expiresAt).getTime() > now);
+      .filter((b) => new Date(b.expiresAt).getTime() > now)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     const grouped = bounties.reduce((acc, bounty) => {
       if (!acc[bounty.theme]) acc[bounty.theme] = [];

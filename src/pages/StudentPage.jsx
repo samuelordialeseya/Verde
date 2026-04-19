@@ -99,8 +99,8 @@ function StudentPage() {
     );
   };
 
-  const createQR = () => {
-    const token = store.createRedemptionToken(redeemAmount);
+  const createQR = async () => {
+    const token = await store.createRedemptionToken(redeemAmount);
     setError(token.error || "");
   };
 
@@ -530,7 +530,7 @@ function StudentPage() {
                         <div className="mt-0.5 text-[10px] font-semibold text-[#2f4f44]">10% discount</div>
                       </div>
                     </div>
-                    <button type="button" className="text-[11px] font-semibold text-[#1f2932]">
+                    <button type="button" onClick={createQR} className="text-[11px] font-semibold text-[#1f2932]">
                       Use now
                     </button>
                   </div>
@@ -542,7 +542,7 @@ function StudentPage() {
                         <div className="mt-0.5 text-[10px] font-semibold text-[#2f4f44]">10% discount</div>
                       </div>
                     </div>
-                    <button type="button" className="text-[11px] font-semibold text-[#1f2932]">
+                    <button type="button" onClick={createQR} className="text-[11px] font-semibold text-[#1f2932]">
                       Use now
                     </button>
                   </div>
