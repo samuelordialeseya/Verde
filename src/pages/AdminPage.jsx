@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import Papa from "papaparse";
 import { format } from "date-fns";
-import { useAppStore } from "../context/appStore";
+import { useRealBackendStore as useAppStore } from "../hooks/useRealBackendStore";
 
 function AdminPage() {
   const { bounties, submissions, claims, leaderboard, transactions } = useAppStore();

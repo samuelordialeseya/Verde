@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { BrowserMultiFormatReader } from "@zxing/library";
-import { useAppStore } from "../context/appStore";
+import { useRealBackendStore as useAppStore } from "../hooks/useRealBackendStore";
 
 function VendorPage() {
   const { id } = useParams();

@@ -4,7 +4,7 @@ import { format, formatDistanceToNowStrict } from "date-fns";
 import PhoneFrame from "../components/PhoneFrame";
 import BottomNav from "../components/BottomNav";
 import NameModal from "../components/NameModal";
-import { useAppStore } from "../context/appStore";
+import { useRealBackendStore as useAppStore } from "../hooks/useRealBackendStore";
 import { fetchGeminiVerdictSentence } from "../services/geminiReason";
 
 const tabs = ["All", "Canteen", "Energy", "Waste"];
