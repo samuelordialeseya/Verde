@@ -125,22 +125,27 @@ function StudentPage() {
 
   const submit = async (bounty) => {
     if (!selectedFile) return;
-    const response = await store.submitBounty(bounty.id, selectedFile);
-    if (!response || response.error) {
-      setError(response?.error || "Submission failed.");
-      return;
+    try {
+      const response = await store.submitBounty(bounty.id, selectedFile);
+      if (!response || response.error) {
+        setError(response?.error || "Submission failed.");
+        return;
+      }
+      setResult({ ...response, geminiReason: null, geminiLoading: true });
+      setActiveScreen("result");
+      const geminiReason = await fetchGeminiVerdictSentence({
+        bountyTitle: bounty.title,
+        verdict: response.verdict,
+        confidence: response.confidence,
+        baseReason: response.reason,
+      });
+      setResult((prev) =>
+        prev && prev.id === response.id ? { ...prev, geminiReason, geminiLoading: false } : prev
+      );
+    } catch (err) {
+      console.error("Submit failed:", err);
+      setError("Error submitting photo: " + err.message);
     }
-    setResult({ ...response, geminiReason: null, geminiLoading: true });
-    setActiveScreen("result");
-    const geminiReason = await fetchGeminiVerdictSentence({
-      bountyTitle: bounty.title,
-      verdict: response.verdict,
-      confidence: response.confidence,
-      baseReason: response.reason,
-    });
-    setResult((prev) =>
-      prev && prev.id === response.id ? { ...prev, geminiReason, geminiLoading: false } : prev
-    );
   };
 
   const createQR = async () => {
@@ -396,6 +401,7 @@ function StudentPage() {
                     <input 
                       type="file" 
                       accept="image/*" 
+                      capture="environment"
                       onChange={handleFileChange}
                       className="absolute inset-0 cursor-pointer opacity-0"
                     />
@@ -416,6 +422,7 @@ function StudentPage() {
                 >
                   ⚙ Submit for AI Verification
                 </button>
+                {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
                 <div className="mt-2 text-center text-[8px] tracking-[0.2em] text-[#adb5bc]">VERDE BLOCKCHAIN SECURED</div>
               </article>
               <button type="button" onClick={() => setActiveScreen("home")} className="w-full rounded-2xl border border-[#dfe5e8] py-2 text-sm text-[#5f6b75]">
