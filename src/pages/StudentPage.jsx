@@ -61,6 +61,7 @@ function StudentPage() {
   const redeemAmount = 50;
   const [error, setError] = useState("");
   const [countdown, setCountdown] = useState("");
+  const [selectedVoucher, setSelectedVoucher] = useState(null);
 
   // Safe countdown timer for QR code expiry
   useEffect(() => {
@@ -571,33 +572,52 @@ function StudentPage() {
                   <span className="font-semibold text-[#008a4d]">₱50 = 10% discount</span>
                 </div>
                 <div className="mt-3 space-y-2">
-                  <div className="flex items-center justify-between rounded-2xl bg-[#eaffee] px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <div className="grid h-8 w-8 place-items-center rounded-lg bg-[#c3f7d6] text-[#007f43]">%</div>
-                      <div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedVoucher("canteen")}
+                    className={`flex items-center justify-between rounded-2xl px-3 py-2 cursor-pointer transition-colors ${
+                      selectedVoucher === "canteen" ? "bg-[#c3f7d6] border-2 border-[#007f43]" : "bg-[#eaffee] border-2 border-transparent"
+                    }`}
+                  >
+                    <div className="flex flex-1 items-center gap-2">
+                      <div className="grid h-8 w-8 place-items-center rounded-lg bg-[#007f43] text-white">%</div>
+                      <div className="text-left">
                         <div className="text-[12px] font-semibold leading-none text-[#1f2932]">Main Canteen</div>
                         <div className="mt-0.5 text-[10px] font-semibold text-[#2f4f44]">10% discount</div>
                       </div>
                     </div>
-                    <button type="button" onClick={createQR} className="text-[11px] font-semibold text-[#1f2932]">
-                      Use now
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between rounded-2xl bg-[#eaffee] px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <div className="grid h-8 w-8 place-items-center rounded-lg bg-[#c3f7d6] text-[#007f43]">%</div>
-                      <div>
+                    <span className="text-[11px] font-semibold text-[#1f2932]">
+                      {selectedVoucher === "canteen" ? "Selected ✓" : "Select"}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedVoucher("printshop")}
+                    className={`flex items-center justify-between rounded-2xl px-3 py-2 cursor-pointer transition-colors ${
+                      selectedVoucher === "printshop" ? "bg-[#c3f7d6] border-2 border-[#007f43]" : "bg-[#eaffee] border-2 border-transparent"
+                    }`}
+                  >
+                    <div className="flex flex-1 items-center gap-2">
+                      <div className="grid h-8 w-8 place-items-center rounded-lg bg-[#007f43] text-white">%</div>
+                      <div className="text-left">
                         <div className="text-[12px] font-semibold leading-none text-[#1f2932]">Print Shop</div>
                         <div className="mt-0.5 text-[10px] font-semibold text-[#2f4f44]">10% discount</div>
                       </div>
                     </div>
-                    <button type="button" onClick={createQR} className="text-[11px] font-semibold text-[#1f2932]">
-                      Use now
-                    </button>
-                  </div>
+                    <span className="text-[11px] font-semibold text-[#1f2932]">
+                      {selectedVoucher === "printshop" ? "Selected ✓" : "Select"}
+                    </span>
+                  </button>
                 </div>
-                <button type="button" onClick={createQR} className="mt-3 w-full rounded-2xl bg-[#007f43] py-3 text-[14px] font-semibold leading-none tracking-[-0.02em] text-white">
-                  Generate QR Code →
+                <button
+                  type="button"
+                  onClick={createQR}
+                  disabled={!selectedVoucher || store.pendingRedemption}
+                  className={`mt-3 w-full rounded-2xl py-3 text-[14px] font-semibold leading-none tracking-[-0.02em] text-white transition-opacity ${
+                    selectedVoucher && !store.pendingRedemption ? "bg-[#007f43] opacity-100" : "bg-gray-400 opacity-50 cursor-not-allowed"
+                  }`}
+                >
+                  {store.pendingRedemption ? "QR Code Active Below" : selectedVoucher ? "Generate QR Code →" : "Select a voucher first"}
                 </button>
                 {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
                 {store.pendingRedemption && (
