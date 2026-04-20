@@ -575,36 +575,36 @@ function StudentPage() {
                   <button
                     type="button"
                     onClick={() => setSelectedVoucher("canteen")}
-                    className={`flex items-center justify-between rounded-2xl px-3 py-2 cursor-pointer transition-colors ${
-                      selectedVoucher === "canteen" ? "bg-[#c3f7d6] border-2 border-[#007f43]" : "bg-[#eaffee] border-2 border-transparent"
+                    className={`w-full flex items-center justify-between rounded-2xl px-3 py-2 cursor-pointer transition-all ${
+                      selectedVoucher === "canteen" ? "bg-[#c3f7d6] ring-2 ring-inset ring-[#007f43]" : "bg-[#eaffee]"
                     }`}
                   >
-                    <div className="flex flex-1 items-center gap-2">
+                    <div className="flex items-center gap-2">
                       <div className="grid h-8 w-8 place-items-center rounded-lg bg-[#007f43] text-white">%</div>
                       <div className="text-left">
                         <div className="text-[12px] font-semibold leading-none text-[#1f2932]">Main Canteen</div>
                         <div className="mt-0.5 text-[10px] font-semibold text-[#2f4f44]">10% discount</div>
                       </div>
                     </div>
-                    <span className="text-[11px] font-semibold text-[#1f2932]">
+                    <span className="text-[11px] font-semibold text-[#1f2932] shrink-0">
                       {selectedVoucher === "canteen" ? "Selected ✓" : "Select"}
                     </span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setSelectedVoucher("printshop")}
-                    className={`flex items-center justify-between rounded-2xl px-3 py-2 cursor-pointer transition-colors ${
-                      selectedVoucher === "printshop" ? "bg-[#c3f7d6] border-2 border-[#007f43]" : "bg-[#eaffee] border-2 border-transparent"
+                    className={`w-full flex items-center justify-between rounded-2xl px-3 py-2 cursor-pointer transition-all ${
+                      selectedVoucher === "printshop" ? "bg-[#c3f7d6] ring-2 ring-inset ring-[#007f43]" : "bg-[#eaffee]"
                     }`}
                   >
-                    <div className="flex flex-1 items-center gap-2">
+                    <div className="flex items-center gap-2">
                       <div className="grid h-8 w-8 place-items-center rounded-lg bg-[#007f43] text-white">%</div>
                       <div className="text-left">
                         <div className="text-[12px] font-semibold leading-none text-[#1f2932]">Print Shop</div>
                         <div className="mt-0.5 text-[10px] font-semibold text-[#2f4f44]">10% discount</div>
                       </div>
                     </div>
-                    <span className="text-[11px] font-semibold text-[#1f2932]">
+                    <span className="text-[11px] font-semibold text-[#1f2932] shrink-0">
                       {selectedVoucher === "printshop" ? "Selected ✓" : "Select"}
                     </span>
                   </button>
@@ -630,6 +630,16 @@ function StudentPage() {
                     <div className="mt-2 text-center text-[13px] font-semibold text-[#f29a2b]">
                       ◷ Expires in {countdown || "--"}
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        localStorage.removeItem("verde-pending-redemption");
+                        window.location.reload(); // Simple reload to clear store state since state is bound to hook initialization
+                      }}
+                      className="mt-3 block w-full rounded-xl bg-[#fcedebee] py-2 text-center text-[12px] font-semibold text-[#da3c3c]"
+                    >
+                      Cancel QR Code
+                    </button>
                   </div>
                 )}
               </div>
