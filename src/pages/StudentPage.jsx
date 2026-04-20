@@ -60,8 +60,6 @@ function StudentPage() {
   const [result, setResult] = useState(null);
   const redeemAmount = 50;
   const [error, setError] = useState("");
-  const redeemAmount = 50;
-  const [error, setError] = useState("");
   const [countdown, setCountdown] = useState("");
   const [selectedVoucher, setSelectedVoucher] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
