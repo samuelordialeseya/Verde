@@ -145,23 +145,39 @@ export async function processRedemption(tokenId, vendorId) {
 }
 
 export async function getTransactionHistory(studentId, limitCount = 20) {
+  // No orderBy to avoid composite index requirement — sort client-side
   const q = query(
     collection(db, TRANSACTIONS),
-    where("studentId", "==", studentId),
-    orderBy("createdAt", "desc")
+    where("studentId", "==", studentId)
   );
   const snap = await getDocs(q);
-  return snap.docs.slice(0, limitCount).map((d) => ({ id: d.id, ...d.data() }));
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, limitCount);
 }
 
 export function subscribeToTransactions(studentId, callback) {
+  // No orderBy to avoid composite index requirement — sort client-side
   const q = query(
     collection(db, TRANSACTIONS),
-    where("studentId", "==", studentId),
-    orderBy("createdAt", "desc")
+    where("studentId", "==", studentId)
   );
   return onSnapshot(q, (snap) => {
-    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    const sorted = snap.docs
+      .map((d) => {
+        const data = d.data();
+        return {
+          id: d.id,
+          ...data,
+          // Normalize field names to match UI expectations
+          description: data.description || data.label || "Transaction",
+          timestamp: data.timestamp || data.createdAt,
+          type: data.type === "redemption" ? "redeemed" : data.type || "earned",
+        };
+      })
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    callback(sorted);
   });
 }
 
