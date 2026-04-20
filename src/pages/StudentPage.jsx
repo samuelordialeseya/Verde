@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import QRCode from "react-qr-code";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import PhoneFrame from "../components/PhoneFrame";
@@ -59,6 +59,41 @@ function StudentPage() {
   const [result, setResult] = useState(null);
   const redeemAmount = 50;
   const [error, setError] = useState("");
+  const [countdown, setCountdown] = useState("");
+
+  // Safe countdown timer for QR code expiry
+  useEffect(() => {
+    if (!store.pendingRedemption?.expiresAt) {
+      setCountdown("");
+      return;
+    }
+    const tick = () => {
+      const ms = Number(store.pendingRedemption.expiresAt) - Date.now();
+      if (isNaN(ms) || ms <= 0) {
+        setCountdown("Expired");
+        // Clear the expired token from localStorage
+        localStorage.removeItem("verde-pending-redemption");
+        return;
+      }
+      const mins = Math.floor(ms / 60000);
+      const secs = Math.floor((ms % 60000) / 1000);
+      setCountdown(`${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [store.pendingRedemption]);
+
+  // Safe date formatter - never crashes
+  const safeFormat = useCallback((val, fmt) => {
+    try {
+      const d = new Date(val);
+      if (isNaN(d.getTime())) return "--";
+      return format(d, fmt);
+    } catch {
+      return "--";
+    }
+  }, []);
 
   const bounties = useMemo(() => {
     const base = store.bounties.filter((b) => b.isActive);
@@ -559,7 +594,7 @@ function StudentPage() {
                       <QRCode size={130} value={store.pendingRedemption.id} />
                     </div>
                     <div className="mt-2 text-center text-[13px] font-semibold text-[#f29a2b]">
-                      ◷ Expires in {format(new Date(store.pendingRedemption.expiresAt), "mm:ss")}
+                      ◷ Expires in {countdown || "--"}
                     </div>
                   </div>
                 )}
@@ -582,7 +617,7 @@ function StudentPage() {
                         <ActivityIcon tx={tx} />
                         <div className="min-w-0">
                           <div className="truncate text-[12px] font-semibold text-[#1f2932]">{tx.description}</div>
-                          <div className="text-[9px] text-[#77828b]">{format(new Date(tx.timestamp), "MMM d, h:mm a")}</div>
+                          <div className="text-[9px] text-[#77828b]">{safeFormat(tx.timestamp, "MMM d, h:mm a")}</div>
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
