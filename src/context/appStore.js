@@ -157,10 +157,10 @@ export const useAppStore = create((set, get) => ({
   consumeRedemptionToken: (tokenId) => {
     const state = get();
     const token = state.pendingRedemption;
-    if (!token || token.id !== tokenId) return { ok: false, message: "Token not found." };
-    if (Date.now() > token.expiresAt) return { ok: false, message: "Token expired." };
-    if (token.status !== "pending") return { ok: false, message: "Token already redeemed." };
-    if (state.coinBalance < token.amount) return { ok: false, message: "Insufficient student balance." };
+    if (!token || token.id !== tokenId) return { ok: false, message: "Token not found.", errorType: "not_found" };
+    if (Date.now() > token.expiresAt) return { ok: false, message: "Token expired.", errorType: "expired", token };
+    if (token.status !== "pending") return { ok: false, message: "Token already redeemed.", errorType: "already_redeemed", token };
+    if (state.coinBalance < token.amount) return { ok: false, message: "Insufficient student balance.", errorType: "low_balance", token };
 
     const nextTx = {
       id: `tx-${uid()}`,
@@ -181,6 +181,7 @@ export const useAppStore = create((set, get) => ({
     return {
       ok: true,
       message: `${token.amount} coins redeemed - ${token.displayName} - P${Math.floor(token.amount / 10)} discount`,
+      token: updatedToken,
     };
   },
 }));
