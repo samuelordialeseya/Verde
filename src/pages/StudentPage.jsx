@@ -60,8 +60,12 @@ function StudentPage() {
   const [result, setResult] = useState(null);
   const redeemAmount = 50;
   const [error, setError] = useState("");
+  const redeemAmount = 50;
+  const [error, setError] = useState("");
   const [countdown, setCountdown] = useState("");
   const [selectedVoucher, setSelectedVoucher] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
   // Safe countdown timer for QR code expiry
   useEffect(() => {
@@ -122,7 +126,8 @@ function StudentPage() {
   }, [leaderboard]);
 
   const submit = async (bounty) => {
-    const response = await store.submitBounty(bounty.id, "proof.jpg");
+    if (!selectedFile) return;
+    const response = await store.submitBounty(bounty.id, selectedFile);
     if (!response || response.error) {
       setError(response?.error || "Submission failed.");
       return;
@@ -161,6 +166,14 @@ function StudentPage() {
     if (item === "Bounties") setActiveScreen("bounties");
     if (item === "Wallet") setActiveScreen("wallet");
     if (item === "Rankings") setActiveScreen("leaderboard");
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
   };
 
   const isYouRow = (displayName) =>
@@ -357,22 +370,51 @@ function StudentPage() {
                   $ Estimated Reward {selectedBounty?.coinReward || 25} coins
                 </div>
                 <div className="mt-4 text-[12px] font-semibold tracking-[0.12em] text-[#454d56]">EVIDENCE</div>
-                <div className="relative mt-2 h-48 overflow-hidden rounded-3xl bg-[linear-gradient(160deg,#3b2e1e,#8f6238)]">
-                  <button
-                    type="button"
-                    className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-[12px] font-semibold text-white backdrop-blur-[2px]"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                      <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9M20 20v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                {previewUrl ? (
+                  <div className="relative mt-2 h-48 overflow-hidden rounded-3xl bg-[#1e2329]">
+                    <img src={previewUrl} alt="Evidence Preview" className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedFile(null);
+                        setPreviewUrl(null);
+                      }}
+                      className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-[12px] font-semibold text-white backdrop-blur-[2px]"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                        <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative mt-2 flex h-48 flex-col items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed border-[#d1d9e0] bg-[#f9fafa]">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#8a959d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-2">
+                       <path d="M21.2 15c.7-1.2 1-2.5.7-3.9-.6-2-2.4-3.5-4.4-3.5h-1.2c-.7-3-3.2-5.2-6.2-5.6-3-.3-5.9 1.3-7.3 4-1.2 2.5-1 6.5.5 8.8m8.7-1.6V21"/>
+                       <path d="M16 16l-4-4-4 4"/>
                     </svg>
-                    Retake
-                  </button>
-                </div>
-                <div className="mt-3 rounded-2xl bg-[#ebfff3] px-3 py-2 text-[12px] text-[#3a8f60]">AI is analyzing your photo</div>
+                    <div className="text-[14px] font-semibold text-[#454d56]">Upload Photo</div>
+                    <div className="mt-1 text-[11px] text-[#8a959d]">Take a picture or choose file</div>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleFileChange}
+                      className="absolute inset-0 cursor-pointer opacity-0"
+                    />
+                  </div>
+                )}
+                
+                {selectedFile && (
+                  <div className="mt-3 rounded-2xl bg-[#ebfff3] px-3 py-2 text-[12px] text-[#3a8f60]">Photo attached, ready for AI analysis</div>
+                )}
+                
                 <button
                   type="button"
                   onClick={() => submit(selectedBounty || store.bounties[0])}
-                  className="mt-3 w-full rounded-2xl bg-[#dfe5e8] py-3 text-[12px] font-semibold text-[#7b848c]"
+                  disabled={!selectedFile}
+                  className={`mt-3 w-full rounded-2xl py-3 text-[12px] font-semibold transition-colors ${
+                    selectedFile ? "bg-[#007f43] text-white" : "bg-[#dfe5e8] text-[#7b848c] cursor-not-allowed"
+                  }`}
                 >
                   ⚙ Submit for AI Verification
                 </button>
@@ -429,7 +471,15 @@ function StudentPage() {
                   </button>
                 )}
                 {result.verdict === "rejected" && (
-                  <button type="button" onClick={() => setActiveScreen("submit")} className="mt-3 w-full rounded-xl bg-[#007f43] py-2.5 text-[14px] font-semibold text-white">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      setPreviewUrl(null);
+                      setActiveScreen("submit");
+                    }}
+                    className="mt-3 w-full rounded-xl bg-[#007f43] py-2.5 text-[14px] font-semibold text-white"
+                  >
                     Retake Photo
                   </button>
                 )}

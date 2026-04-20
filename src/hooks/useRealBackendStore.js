@@ -81,12 +81,14 @@ export function useRealBackendStore() {
     return submissions.some((c) => c.bountyId === bountyId && c.verdict !== "rejected");
   };
 
-  const submitBounty = async (bountyId, fileName) => {
-    // Use a blank fake file since we don't have camera UI connected yet
-    const placeholderFile = new File(["dummy"], fileName, { type: "image/jpeg" });
+  const submitBounty = async (bountyId, fileOrName) => {
+    const fileToUpload = typeof fileOrName === "string" 
+      ? new File(["dummy"], fileOrName, { type: "image/jpeg" }) 
+      : fileOrName;
+
     
     // Call Real Backend Endpoint
-    const result = await submitBountyProof(student.studentId, bountyId, placeholderFile);
+    const result = await submitBountyProof(student.studentId, bountyId, fileToUpload);
     
     // Re-fetch submissions to accurately update claims limit
     getStudentSubmissions(student.studentId).then(setSubmissions);
@@ -94,7 +96,7 @@ export function useRealBackendStore() {
     return {
       id: result.submissionId,
       bountyId,
-      fileName,
+      fileName: fileToUpload.name,
       verdict: result.verdict,
       reason: result.reason,
       confidence: Math.round(result.confidence * 100) || 50,
