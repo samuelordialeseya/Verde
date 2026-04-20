@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
-import QRCode from "react-qr-code";
+import _QRCode from "react-qr-code";
+const QRCode = _QRCode.default || _QRCode.QRCode || _QRCode;
 import { format, formatDistanceToNowStrict } from "date-fns";
 import PhoneFrame from "../components/PhoneFrame";
 import BottomNav from "../components/BottomNav";
@@ -120,7 +121,11 @@ function StudentPage() {
   }, [leaderboard]);
 
   const submit = async (bounty) => {
-    const response = store.submitBounty(bounty.id, "proof.jpg");
+    const response = await store.submitBounty(bounty.id, "proof.jpg");
+    if (!response || response.error) {
+      setError(response?.error || "Submission failed.");
+      return;
+    }
     setResult({ ...response, geminiReason: null, geminiLoading: true });
     setActiveScreen("result");
     const geminiReason = await fetchGeminiVerdictSentence({
@@ -135,8 +140,17 @@ function StudentPage() {
   };
 
   const createQR = async () => {
-    const token = await store.createRedemptionToken(redeemAmount);
-    setError(token.error || "");
+    try {
+      const token = await store.createRedemptionToken(redeemAmount);
+      if (!token) {
+        setError("Failed to generate QR code.");
+        return;
+      }
+      setError(token.error || "");
+    } catch (err) {
+      setError("QR Error: " + (err?.message || "Unknown error"));
+      console.error("createQR failed:", err);
+    }
   };
 
   const allBounties = useMemo(() => store.bounties, [store.bounties]);
@@ -591,7 +605,7 @@ function StudentPage() {
                     <div className="text-center text-[16px] text-[#64717b]">Username</div>
                     <div className="text-center text-[15px] font-semibold leading-none text-[#008a4d]">10% discount</div>
                     <div className="mt-2 grid place-items-center rounded-xl bg-[#f6f9fb] p-3">
-                      <QRCode size={130} value={store.pendingRedemption.id} />
+                      <QRCode size={130} value={store.pendingRedemption.id || ""} />
                     </div>
                     <div className="mt-2 text-center text-[13px] font-semibold text-[#f29a2b]">
                       ◷ Expires in {countdown || "--"}
