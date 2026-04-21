@@ -6,11 +6,10 @@ import PhoneFrame from "../components/PhoneFrame";
 import BottomNav from "../components/BottomNav";
 import NameModal from "../components/NameModal";
 import { useRealBackendStore as useAppStore } from "../hooks/useRealBackendStore";
-import { fetchGeminiVerdictSentence } from "../services/geminiReason";
 
 const tabs = ["All", "Canteen", "Energy", "Waste"];
 
-const hasGeminiKey = Boolean(import.meta.env.VITE_GEMINI_API_KEY);
+const hasGeminiKey = true;
 
 function getThemeStyles(theme) {
   const t = (theme || "").toLowerCase();
@@ -144,7 +143,7 @@ function StudentPage() {
         setIsSubmitting(false);
         return;
       }
-      setResult({ ...response, geminiReason: null, geminiLoading: true });
+      setResult({ ...response, geminiReason: response.reason, geminiLoading: false });
       setActiveScreen("result");
       
       // Cleanup submission state after moving to result screen
@@ -152,15 +151,6 @@ function StudentPage() {
       setSelectedFile(null);
       setPreviewUrl(null);
 
-      const geminiReason = await fetchGeminiVerdictSentence({
-        bountyTitle: bounty.title,
-        verdict: response.verdict,
-        confidence: response.confidence,
-        baseReason: response.reason,
-      });
-      setResult((prev) =>
-        prev && prev.id === response.id ? { ...prev, geminiReason, geminiLoading: false } : prev
-      );
     } catch (err) {
       console.error("Submit failed:", err);
       let msg = err.message;
@@ -213,6 +203,15 @@ function StudentPage() {
   const isYouRow = (displayName) =>
     (store.displayName && displayName === store.displayName) ||
     (!store.displayName && displayName === "Alex Mercer");
+
+  const captureTips = useMemo(() => {
+    const tips = [];
+    if (selectedBounty?.instructions) tips.push(selectedBounty.instructions);
+    if (selectedBounty?.aiVerificationHint) tips.push(selectedBounty.aiVerificationHint);
+    tips.push("Take the photo while doing the action, not after.");
+    tips.push("Include campus context (canteen/classroom/bin area) in frame.");
+    return tips;
+  }, [selectedBounty]);
 
   return (
     <main className="min-h-screen bg-[#1a1d23] p-4 font-sans text-zinc-900">
@@ -404,6 +403,14 @@ function StudentPage() {
                   $ Estimated Reward {selectedBounty?.coinReward || 25} coins
                 </div>
                 <div className="mt-4 text-[12px] font-semibold tracking-[0.12em] text-[#454d56]">EVIDENCE</div>
+                <div className="mt-2 rounded-2xl border border-[#dbe7df] bg-[#f3fbf6] p-3">
+                  <div className="text-[10px] font-semibold tracking-[0.12em] text-[#2d6c4d]">PHOTO TIPS (FOR APPROVAL)</div>
+                  <ul className="mt-1 list-disc space-y-1 pl-4 text-[11px] leading-4 text-[#3f6653]">
+                    {captureTips.map((tip, idx) => (
+                      <li key={`${tip}-${idx}`}>{tip}</li>
+                    ))}
+                  </ul>
+                </div>
                 {previewUrl ? (
                   <div className="relative mt-2 h-48 overflow-hidden rounded-3xl bg-[#1e2329]">
                     <img src={previewUrl} alt="Evidence Preview" className="h-full w-full object-cover" />
@@ -456,7 +463,7 @@ function StudentPage() {
                        <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                          <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
                        </svg>
-                       Verifying with Gemini AI...
+                       Verifying with Vision AI...
                     </span>
                   ) : "⚙ Submit for AI Verification"}
                 </button>
@@ -488,6 +495,16 @@ function StudentPage() {
                 <p className="mt-2 text-[13px] italic text-[#66727b]">
                   &ldquo;{result.geminiLoading ? "…" : result.geminiReason || result.reason}&rdquo;
                 </p>
+                {result.verdict === "rejected" && Array.isArray(result.missingElements) && result.missingElements.length > 0 && (
+                  <div className="mt-3 rounded-2xl border border-[#ffd7d7] bg-[#fff4f4] p-3 text-left">
+                    <div className="text-[10px] font-semibold tracking-[0.12em] text-[#b42323]">WHAT TO INCLUDE NEXT PHOTO</div>
+                    <ul className="mt-1 list-disc space-y-1 pl-4 text-[11px] text-[#7f2a2a]">
+                      {result.missingElements.map((item, idx) => (
+                        <li key={`${item}-${idx}`}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 <div className="mt-3 rounded-2xl bg-[#f3f6f6] p-3 text-[12px]">
                   <div className="mb-2 flex justify-between font-semibold text-[#1f2730]">
                     <span>AI CONFIDENCE</span>
@@ -509,7 +526,15 @@ function StudentPage() {
                   </div>
                 )}
                 {result.verdict === "approved" && (
-                  <button type="button" className="mt-3 w-full rounded-xl bg-[#007f43] py-2.5 text-[14px] font-semibold text-white">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Coins are already credited after approval; send user to wallet to use them.
+                      setResult(null);
+                      setActiveScreen("wallet");
+                    }}
+                    className="mt-3 w-full rounded-xl bg-[#007f43] py-2.5 text-[14px] font-semibold text-white"
+                  >
                     Claim Rewards
                   </button>
                 )}

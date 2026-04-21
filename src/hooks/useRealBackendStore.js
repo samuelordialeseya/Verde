@@ -85,7 +85,7 @@ export function useRealBackendStore() {
   };
 
   const isClaimed = (bountyId) => {
-    return submissions.some((c) => c.bountyId === bountyId && c.verdict !== "rejected");
+    return submissions.some((c) => c.bountyId === bountyId && c.verdict === "approved");
   };
 
   const submitBounty = async (bountyId, fileOrName) => {
