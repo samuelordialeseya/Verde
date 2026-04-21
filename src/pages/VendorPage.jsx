@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { BarcodeFormat, BrowserMultiFormatReader, DecodeHintType } from "@zxing/library";
 import { format } from "date-fns";
 import { useAppStore } from "../context/appStore";
@@ -174,9 +174,10 @@ function AppShell({ children }) {
 }
 
 export default function VendorPage() {
+  const navigate = useNavigate();
   const { id } = useParams();
   const { consumeRedemptionToken, pendingRedemption } = useAppStore();
-  const [viewState, setViewState] = useState("scan");
+  const [viewState, setViewState] = useState("idle");
   const [resultData, setResultData] = useState(null);
   const [showManualCard, setShowManualCard] = useState(false);
   const [manualToken, setManualToken] = useState("");
@@ -191,9 +192,11 @@ export default function VendorPage() {
   const vendorName = id === "1" ? "Main Canteen" : id === "2" ? "Print Shop" : `Vendor ${id}`;
 
   const handleScan = (tokenText) => {
-    const parsedToken = tokenText.includes("rdm-")
-      ? tokenText.slice(tokenText.indexOf("rdm-")).split(/[\s"&?]/)[0]
-      : tokenText.trim();
+    // Extract rdm- ID if it's embedded in a string, otherwise use raw text
+    const rdmMatch = tokenText.match(/rdm-[a-z0-9]+/i);
+    const parsedToken = rdmMatch ? rdmMatch[0] : tokenText.trim();
+    
+    console.log("Scanned Token:", parsedToken); // Add log for debugging
     const res = consumeRedemptionToken(parsedToken);
     setResultData(res);
     setViewState(res.ok ? "success" : "error");
@@ -374,6 +377,7 @@ export default function VendorPage() {
           </div>
 
           <button onClick={() => setViewState("scan")} className="mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#007f43] text-[12px] font-semibold text-white">Scan Next →</button>
+          <button onClick={() => setViewState("idle")} className="mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[#dfe5e8] text-[12px] font-semibold text-[#5f6b75]">Close</button>
           <button className="mt-4 block w-full text-center text-[12px] font-semibold text-[#58606a]">Report a Technical Issue</button>
         </div>
       </AppShell>
@@ -428,6 +432,7 @@ export default function VendorPage() {
           </div>
 
           <button onClick={() => setViewState("scan")} className="mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#00A15E] text-[12px] font-semibold text-white">Try Scanning Again →</button>
+          <button onClick={() => setViewState("idle")} className="mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[#dfe5e8] text-[12px] font-semibold text-[#5f6b75]">Close</button>
           <button className="mt-4 block w-full text-center text-[12px] font-semibold text-[#58606a]">Report a Technical Issue</button>
         </div>
       </AppShell>
@@ -438,9 +443,17 @@ export default function VendorPage() {
     <AppShell>
       <TopNav />
       <div className="px-3.5 pt-5 pb-5">
-        <div className="mb-3 flex items-center gap-2">
-          <span className="rounded-full bg-[#70f39f] px-2 py-1 text-[9px] font-semibold tracking-[0.12em] text-[#0a7e49] uppercase">Official Partner</span>
-          <span className="inline-flex items-center gap-1 text-[9px] font-semibold tracking-[0.12em] text-[#6f7780] uppercase"><span className="h-1.5 w-1.5 rounded-full bg-[#0a7e49]" />Live Session</span>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-[#70f39f] px-2 py-1 text-[9px] font-semibold tracking-[0.12em] text-[#0a7e49] uppercase">Official Partner</span>
+            <span className="inline-flex items-center gap-1 text-[9px] font-semibold tracking-[0.12em] text-[#6f7780] uppercase"><span className="h-1.5 w-1.5 rounded-full bg-[#0a7e49]" />Live Session</span>
+          </div>
+          <button onClick={() => setViewState("idle")} className="text-zinc-400 hover:text-zinc-600">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
 
         <h1 className="text-[28px] leading-[1.05] font-bold tracking-[-0.02em] text-[#151a1f]">{vendorName}</h1>
@@ -451,26 +464,40 @@ export default function VendorPage() {
         <p className="mt-3 text-[13px] leading-6 text-[#5e666f]">Verify sustainability credentials and reward students in real-time.</p>
 
         <section className="relative mt-7 h-[145px] overflow-hidden rounded-[24px] border border-[#e8ebee] bg-[#8e8f84]">
-          <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover opacity-45 blur-[1px]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_65%_18%,rgba(255,255,200,0.45)_0,rgba(255,255,200,0)_28%),linear-gradient(180deg,rgba(0,0,0,0.05),rgba(0,0,0,0.25))]" />
-          <div className="absolute inset-x-3 bottom-4 flex items-center gap-3 rounded-full border border-white/25 bg-black/35 px-4 py-2.5 backdrop-blur-sm">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/15">
+          {viewState === "scan" ? (
+            <>
+              <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover opacity-100" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_65%_18%,rgba(255,255,200,0.45)_0,rgba(255,255,200,0)_28%),linear-gradient(180deg,rgba(0,0,0,0.05),rgba(0,0,0,0.25))]" />
+              <div className="absolute inset-x-3 bottom-4 flex items-center gap-3 rounded-full border border-white/25 bg-black/35 px-4 py-2.5 backdrop-blur-sm">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/15">
+                  <IconScanQr />
+                </span>
+                <p className="text-[12px] leading-4 text-white">
+                  {isScannerStarting
+                    ? "Starting camera scanner..."
+                    : cameraReady
+                      ? "Position student QR code within the frame"
+                      : "Camera not ready. Tap retry or use manual entry."}
+                </p>
+              </div>
+            </>
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-800 text-white p-4 text-center">
               <IconScanQr />
-            </span>
-            <p className="text-[12px] leading-4 text-white">
-              {isScannerStarting
-                ? "Starting camera scanner..."
-                : cameraReady
-                  ? "Position student QR code within the frame"
-                  : "Camera not ready. Tap retry or use manual entry."}
-            </p>
-          </div>
-          {cameraError && (
+              <button 
+                onClick={() => setViewState("scan")}
+                className="mt-3 rounded-full bg-[#00A15E] px-6 py-2 text-[12px] font-bold"
+              >
+                Open Camera Scanner
+              </button>
+            </div>
+          )}
+          {viewState === "scan" && cameraError && (
             <div className="absolute inset-x-3 top-3 rounded-xl border border-[#fecaca] bg-[#fee2e2]/90 px-3 py-2 text-[10px] font-semibold text-[#991b1b]">
               {cameraError}
             </div>
           )}
-          {!!availableCameras.length && (
+          {viewState === "scan" && !!availableCameras.length && (
             <div className="absolute inset-x-3 top-3 z-10 flex items-center gap-2">
               <select
                 value={selectedCameraId}
@@ -489,7 +516,7 @@ export default function VendorPage() {
               </select>
             </div>
           )}
-          {!cameraReady && (
+          {viewState === "scan" && !cameraReady && (
             <button
               type="button"
               onClick={() => startScanner(selectedCameraId)}

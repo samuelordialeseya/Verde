@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import QRCode from "react-qr-code";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import PhoneFrame from "../components/PhoneFrame";
@@ -56,9 +56,26 @@ function StudentPage() {
   const [activeScreen, setActiveScreen] = useState("home");
   const [themeTab, setThemeTab] = useState("All");
   const [selectedBounty, setSelectedBounty] = useState(null);
-  const [result, setResult] = useState(null);
-  const redeemAmount = 50;
+  const [selectedVoucher, setSelectedVoucher] = useState(null);
   const [error, setError] = useState("");
+  const [timeLeft, setTimeLeft] = useState("");
+
+  // Countdown timer logic
+  useEffect(() => {
+    if (!store.pendingRedemption) return;
+    const interval = setInterval(() => {
+      const remaining = store.pendingRedemption.expiresAt - Date.now();
+      if (remaining <= 0) {
+        setTimeLeft("Expired");
+        clearInterval(interval);
+      } else {
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.floor((remaining % 60000) / 1000);
+        setTimeLeft(`${mins}:${secs.toString().padStart(2, "0")}`);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [store.pendingRedemption]);
 
   const bounties = useMemo(() => {
     const base = store.bounties.filter((b) => b.isActive);
@@ -100,8 +117,22 @@ function StudentPage() {
   };
 
   const createQR = () => {
-    const token = store.createRedemptionToken(redeemAmount);
-    setError(token.error || "");
+    if (!selectedVoucher) {
+      setError("Please select a voucher first.");
+      return;
+    }
+    const token = store.createRedemptionToken(selectedVoucher.amount);
+    if (token.error) {
+      setError(token.error);
+    } else {
+      setError("");
+    }
+  };
+
+  const dismissQR = () => {
+    store.clearPendingRedemption();
+    setSelectedVoucher(null);
+    setError("");
   };
 
   const allBounties = useMemo(() => store.bounties, [store.bounties]);
@@ -527,11 +558,15 @@ function StudentPage() {
                       <div className="grid h-8 w-8 place-items-center rounded-lg bg-[#c3f7d6] text-[#007f43]">%</div>
                       <div>
                         <div className="text-[12px] font-semibold leading-none text-[#1f2932]">Main Canteen</div>
-                        <div className="mt-0.5 text-[10px] font-semibold text-[#2f4f44]">10% discount</div>
+                        <div className="mt-0.5 text-[10px] font-semibold text-[#2f4f44]">₱50 Discount</div>
                       </div>
                     </div>
-                    <button type="button" className="text-[11px] font-semibold text-[#1f2932]">
-                      Use now
+                    <button 
+                      type="button" 
+                      onClick={() => { setSelectedVoucher({ name: "Main Canteen", amount: 50 }); setError(""); }}
+                      className={`text-[11px] font-semibold ${selectedVoucher?.name === "Main Canteen" ? "text-[#007f43]" : "text-[#1f2932]"}`}
+                    >
+                      {selectedVoucher?.name === "Main Canteen" ? "Selected" : "Select"}
                     </button>
                   </div>
                   <div className="flex items-center justify-between rounded-2xl bg-[#eaffee] px-3 py-2">
@@ -539,11 +574,15 @@ function StudentPage() {
                       <div className="grid h-8 w-8 place-items-center rounded-lg bg-[#c3f7d6] text-[#007f43]">%</div>
                       <div>
                         <div className="text-[12px] font-semibold leading-none text-[#1f2932]">Print Shop</div>
-                        <div className="mt-0.5 text-[10px] font-semibold text-[#2f4f44]">10% discount</div>
+                        <div className="mt-0.5 text-[10px] font-semibold text-[#2f4f44]">₱50 Discount</div>
                       </div>
                     </div>
-                    <button type="button" className="text-[11px] font-semibold text-[#1f2932]">
-                      Use now
+                    <button 
+                      type="button" 
+                      onClick={() => { setSelectedVoucher({ name: "Print Shop", amount: 50 }); setError(""); }}
+                      className={`text-[11px] font-semibold ${selectedVoucher?.name === "Print Shop" ? "text-[#007f43]" : "text-[#1f2932]"}`}
+                    >
+                      {selectedVoucher?.name === "Print Shop" ? "Selected" : "Select"}
                     </button>
                   </div>
                 </div>
@@ -551,15 +590,20 @@ function StudentPage() {
                   Generate QR Code →
                 </button>
                 {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
-                {store.pendingRedemption && (
+                {store.pendingRedemption && store.pendingRedemption.status === "pending" && (
                   <div className="mt-3 rounded-2xl border border-[#e3e9ed] p-3">
-                    <div className="text-center text-[16px] text-[#64717b]">Username</div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-[10px] font-bold tracking-wider text-[#7e8c9a] uppercase">Your QR Token</div>
+                      <button onClick={dismissQR} className="text-[11px] font-semibold text-red-500">Dismiss</button>
+                    </div>
+                    <div className="text-center text-[16px] text-[#64717b]">{store.displayName || "Student"}</div>
                     <div className="text-center text-[15px] font-semibold leading-none text-[#008a4d]">10% discount</div>
                     <div className="mt-2 grid place-items-center rounded-xl bg-[#f6f9fb] p-3">
                       <QRCode size={130} value={store.pendingRedemption.id} />
+                      <p className="mt-2 text-[10px] font-mono text-zinc-400">{store.pendingRedemption.id}</p>
                     </div>
                     <div className="mt-2 text-center text-[13px] font-semibold text-[#f29a2b]">
-                      ◷ Expires in {format(new Date(store.pendingRedemption.expiresAt), "mm:ss")}
+                      ◷ Expires in {timeLeft}
                     </div>
                   </div>
                 )}

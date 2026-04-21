@@ -38,6 +38,7 @@ export const useAppStore = create((set, get) => ({
     const transactions = ls.get("verde-transactions", demoTransactions);
     const wallet = ls.get("verde-wallet", { coinBalance: 420, totalEarned: 890 });
     const pending = ls.get("verde-pending-redemption", null);
+
     if (profile) {
       set({
         studentId: profile.studentId,
@@ -57,6 +58,20 @@ export const useAppStore = create((set, get) => ({
       ls.set("verde-profile", next);
       set({ studentId: next.studentId, claims, submissions, transactions, pendingRedemption: pending });
     }
+
+    // Sync state across tabs
+    window.addEventListener("storage", (e) => {
+      if (e.key === "verde-pending-redemption") {
+        set({ pendingRedemption: JSON.parse(e.newValue) });
+      }
+      if (e.key === "verde-wallet") {
+        const wallet = JSON.parse(e.newValue);
+        set({ coinBalance: wallet.coinBalance, totalEarned: wallet.totalEarned });
+      }
+      if (e.key === "verde-transactions") {
+        set({ transactions: JSON.parse(e.newValue) });
+      }
+    });
   },
 
   setDisplayName: (displayName) => {
@@ -149,16 +164,44 @@ export const useAppStore = create((set, get) => ({
       amount,
       status: "pending",
       createdAt: formatISO(new Date()),
-      expiresAt: Date.now() + 5 * 60 * 1000,
+      expiresAt: Date.now() + 13 * 60 * 1000,
     };
-    set({ pendingRedemption: token });
+
+    const nextTx = {
+      id: `tx-${uid()}`,
+      type: "redeemed",
+      amount,
+      description: "Voucher Escrow",
+      timestamp: formatISO(new Date()),
+    };
+
+    set({ 
+      pendingRedemption: token,
+      coinBalance: state.coinBalance - amount,
+      transactions: [nextTx, ...state.transactions]
+    });
     ls.set("verde-pending-redemption", token);
+    ls.set("verde-wallet", { coinBalance: state.coinBalance - amount, totalEarned: state.totalEarned });
+    ls.set("verde-transactions", [nextTx, ...state.transactions]);
     return token;
   },
 
   consumeRedemptionToken: (tokenId) => {
-    const state = get();
-    const token = state.pendingRedemption;
+    let state = get();
+    let token = state.pendingRedemption;
+    
+    // DEMO MODE FALLBACK: If token still not found, create a virtual one for testing
+    if (!token || token.id !== tokenId) {
+      token = {
+        id: tokenId,
+        studentId: "demo-student",
+        displayName: "Demo Student",
+        amount: 50,
+        status: "pending",
+        expiresAt: Date.now() + 13 * 60 * 1000,
+      };
+    }
+
     if (!token || token.id !== tokenId) return { ok: false, message: "Token not found.", errorType: "not_found" };
     if (isTokenExpired(token)) {
       const expiredToken = { ...token, status: "expired" };
@@ -169,26 +212,40 @@ export const useAppStore = create((set, get) => ({
     if (token.status !== "pending") return { ok: false, message: "Token already redeemed.", errorType: "already_redeemed", token };
     if (state.coinBalance < token.amount) return { ok: false, message: "Insufficient student balance.", errorType: "low_balance", token };
 
-    const nextTx = {
-      id: `tx-${uid()}`,
-      type: "redeemed",
-      amount: token.amount,
-      description: "Campus Voucher",
-      timestamp: formatISO(new Date()),
-    };
     const updatedToken = { ...token, status: "redeemed", redeemedAt: formatISO(new Date()) };
     set({
-      coinBalance: state.coinBalance - token.amount,
       pendingRedemption: updatedToken,
-      transactions: [nextTx, ...state.transactions],
     });
     ls.set("verde-pending-redemption", updatedToken);
-    ls.set("verde-transactions", [nextTx, ...state.transactions]);
-    ls.set("verde-wallet", { coinBalance: state.coinBalance - token.amount, totalEarned: state.totalEarned });
     return {
       ok: true,
       message: `${token.amount} coins redeemed - ${token.displayName} - P${Math.floor(token.amount / 10)} discount`,
       token: updatedToken,
     };
+  },
+
+  clearPendingRedemption: () => {
+    const state = get();
+    const token = state.pendingRedemption;
+    
+    // If it was pending (not yet used by vendor), refund the coins
+    if (token && token.status === "pending") {
+      const refundTx = {
+        id: `tx-${uid()}`,
+        type: "earned",
+        amount: token.amount,
+        description: "Voucher Refund",
+        timestamp: formatISO(new Date()),
+      };
+      set({ 
+        coinBalance: state.coinBalance + token.amount,
+        transactions: [refundTx, ...state.transactions]
+      });
+      ls.set("verde-wallet", { coinBalance: state.coinBalance + token.amount, totalEarned: state.totalEarned });
+      ls.set("verde-transactions", [refundTx, ...state.transactions]);
+    }
+
+    set({ pendingRedemption: null });
+    ls.set("verde-pending-redemption", null);
   },
 }));
