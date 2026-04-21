@@ -130,7 +130,13 @@ function StudentPage() {
   };
 
   const dismissQR = () => {
-    store.clearPendingRedemption();
+    store.clearPendingRedemption(false); // No refund, just finish
+    setSelectedVoucher(null);
+    setError("");
+  };
+
+  const cancelQR = () => {
+    store.clearPendingRedemption(true); // Refund coins
     setSelectedVoucher(null);
     setError("");
   };
@@ -591,19 +597,39 @@ function StudentPage() {
                 </button>
                 {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
                 {store.pendingRedemption && store.pendingRedemption.status === "pending" && (
-                  <div className="mt-3 rounded-2xl border border-[#e3e9ed] p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="text-[10px] font-bold tracking-wider text-[#7e8c9a] uppercase">Your QR Token</div>
-                      <button onClick={dismissQR} className="text-[11px] font-semibold text-red-500">Dismiss</button>
+                  <div className="mt-3 overflow-hidden rounded-2xl border border-[#e3e9ed] bg-white">
+                    <div className="bg-[#f8fafb] px-4 py-2 border-b border-[#e3e9ed]">
+                      <div className="text-[10px] font-bold tracking-wider text-[#7e8c9a] uppercase">Active Voucher Token</div>
                     </div>
-                    <div className="text-center text-[16px] text-[#64717b]">{store.displayName || "Student"}</div>
-                    <div className="text-center text-[15px] font-semibold leading-none text-[#008a4d]">10% discount</div>
-                    <div className="mt-2 grid place-items-center rounded-xl bg-[#f6f9fb] p-3">
-                      <QRCode size={130} value={store.pendingRedemption.id} />
-                      <p className="mt-2 text-[10px] font-mono text-zinc-400">{store.pendingRedemption.id}</p>
+                    
+                    <div className="p-4">
+                      <div className="text-center text-[14px] text-[#64717b]">{store.displayName || "Alex Mercer"}</div>
+                      <div className="text-center text-[16px] font-bold leading-none text-[#008a4d]">₱50 Discount</div>
+                      
+                      <div className="mt-3 grid place-items-center rounded-xl bg-[#f6f9fb] p-4">
+                        <QRCode size={140} value={store.pendingRedemption.id} />
+                        <p className="mt-3 text-[11px] font-mono tracking-widest text-zinc-400">{store.pendingRedemption.id}</p>
+                      </div>
+                      
+                      <div className="mt-3 flex items-center justify-center gap-2 text-[12px] font-semibold text-[#f29a2b]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#f29a2b] animate-pulse" />
+                        Expires in {timeLeft}
+                      </div>
                     </div>
-                    <div className="mt-2 text-center text-[13px] font-semibold text-[#f29a2b]">
-                      ◷ Expires in {timeLeft}
+
+                    <div className="grid grid-cols-2 border-t border-[#e3e9ed]">
+                      <button 
+                        onClick={cancelQR} 
+                        className="py-3 text-[12px] font-semibold text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        Cancel & Refund
+                      </button>
+                      <button 
+                        onClick={dismissQR} 
+                        className="border-l border-[#e3e9ed] py-3 text-[12px] font-bold text-[#008a4d] hover:bg-[#eaffee] transition-colors"
+                      >
+                        Finish & Close
+                      </button>
                     </div>
                   </div>
                 )}

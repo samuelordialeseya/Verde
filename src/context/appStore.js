@@ -224,12 +224,12 @@ export const useAppStore = create((set, get) => ({
     };
   },
 
-  clearPendingRedemption: () => {
+  clearPendingRedemption: (shouldRefund = false) => {
     const state = get();
     const token = state.pendingRedemption;
     
-    // If it was pending (not yet used by vendor), refund the coins
-    if (token && token.status === "pending") {
+    // Only refund if explicitly requested and token was still pending
+    if (shouldRefund && token && token.status === "pending") {
       const refundTx = {
         id: `tx-${uid()}`,
         type: "earned",

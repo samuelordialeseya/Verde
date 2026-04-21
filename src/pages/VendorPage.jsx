@@ -358,21 +358,27 @@ export default function VendorPage() {
             </div>
           </article>
 
-          <div className="scrollbar-hide mt-3 flex gap-2 overflow-x-auto pb-2">
-            <div className="min-w-[49%] shrink-0 rounded-xl bg-white p-3">
-              <div className="mb-2 grid h-8 w-8 place-items-center rounded-full bg-[#d8f5e4]">
-                <IconClock />
+          <div className="mt-4 flex flex-col gap-3">
+            <div className="flex items-start gap-3 rounded-2xl bg-[#f6f9fb] p-3.5">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-white shadow-sm text-zinc-400">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               </div>
-              <p className="text-[12px] font-semibold text-[#1f2937]">Timestamp</p>
-              <p className="mt-2 text-[11px] text-[#6b7280]">{format(new Date(token?.redeemedAt || Date.now()), "MMM d, yyyy · HH:mm")}</p>
-              <p className="text-[11px] text-[#6b7280]">Ref ID: #{token?.id || "VRD-992104-X"}</p>
+              <div>
+                <div className="text-[10px] font-bold tracking-wider text-[#9ba6b1] uppercase">Timestamp</div>
+                <div className="mt-0.5 text-[12px] font-semibold text-[#1f2932]">{format(new Date(token?.redeemedAt || Date.now()), "MMM d, yyyy - HH:mm")}</div>
+                <div className="text-[10px] text-[#5e666f]">Ref ID: #{token?.id || "VRD-992104-X"}</div>
+              </div>
             </div>
-            <div className="min-w-[49%] shrink-0 rounded-xl bg-white p-3">
-              <div className="mb-2 grid h-8 w-8 place-items-center rounded-full bg-[#d8f5e4]">
-                <IconLeaf className="text-[#0a7e49]" />
+            
+            <div className="flex items-start gap-3 rounded-2xl bg-[#f6f9fb] p-3.5">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-white shadow-sm text-[#007f43]">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8a8 8 0 0 1-8 8Z"/><path d="M12 14.74V22"/></svg>
               </div>
-              <p className="text-[12px] font-semibold text-[#1f2937]">Sustainability</p>
-              <p className="mt-2 text-[11px] leading-4 text-[#6b7280]">Circular economy impact validated and carbon offset synced.</p>
+              <div>
+                <div className="text-[10px] font-bold tracking-wider text-[#9ba6b1] uppercase">Sustainability</div>
+                <div className="mt-0.5 text-[12px] font-semibold text-[#1f2932]">Circular economy impact</div>
+                <div className="text-[10px] text-[#5e666f]">Eco-credentials verified</div>
+              </div>
             </div>
           </div>
 
