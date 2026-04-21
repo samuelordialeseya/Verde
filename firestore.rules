@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Students & Transactions: Allow all for development
+    match /students/{studentId} {
+      allow read, write: if true;
+    }
+    
+    match /transactions/{txnId} {
+      allow read, write: if true;
+    }
+
+    // Redemption Tokens
+    match /redemption_tokens/{tokenId} {
+      allow read, write: if true;
+    }
+
+    // Vendors
+    match /vendors/{vendorId} {
+      allow read, write: if true;
+    }
+    
+    // Fallback
+    match /{path=**} {
+      allow read, write: if true;
+    }
+  }
+}
