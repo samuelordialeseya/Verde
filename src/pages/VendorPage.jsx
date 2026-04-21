@@ -205,25 +205,31 @@ export default function VendorPage() {
 
   const loadVideoDevices = async () => {
     try {
+      // If we already have cameras listed, just return them
+      if (availableCameras.length > 0) return availableCameras;
+
       // Prompt permission first so labels/devices are available in Chromium.
       const warmupStream = await navigator.mediaDevices.getUserMedia({ video: true });
       warmupStream.getTracks().forEach((track) => track.stop());
+      
       const devices = await BrowserMultiFormatReader.listVideoInputDevices();
       setAvailableCameras(devices);
+      
       if (!devices.length) {
         setSelectedCameraId("");
         return devices;
       }
-      if (selectedCameraId && devices.some((d) => d.deviceId === selectedCameraId)) {
-        return devices;
-      }
+
+      // Find a suitable rear camera
       const rearDevice =
         devices.find((d) => /back|rear|environment/i.test(d.label)) ||
         devices.find((d) => /camera 0|camera1|cam 0/i.test(d.label)) ||
         devices[0];
+      
       setSelectedCameraId(rearDevice.deviceId);
       return devices;
-    } catch {
+    } catch (err) {
+      console.error("Error loading video devices:", err);
       setAvailableCameras([]);
       setSelectedCameraId("");
       return [];
@@ -235,75 +241,61 @@ export default function VendorPage() {
     setIsScannerStarting(true);
     setCameraError("");
     setCameraReady(false);
-    codeReaderRef.current?.reset();
 
-    const hints = new Map();
-    hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE]);
-    hints.set(DecodeHintType.TRY_HARDER, true);
-    const reader = new BrowserMultiFormatReader(hints);
-    codeReaderRef.current = reader;
+    // Reuse existing reader if it exists, otherwise create it
+    if (!codeReaderRef.current) {
+      const hints = new Map();
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE]);
+      hints.set(DecodeHintType.TRY_HARDER, true);
+      codeReaderRef.current = new BrowserMultiFormatReader(hints);
+    } else {
+      codeReaderRef.current.reset();
+    }
+
+    const reader = codeReaderRef.current;
+    
     try {
       const devices = await loadVideoDevices();
-      if (devices.length) {
-        const nextDeviceId =
-          preferredDeviceId ||
-          selectedCameraId ||
-          devices.find((d) => /back|rear|environment/i.test(d.label))?.deviceId ||
-          devices[0].deviceId;
+      const nextDeviceId =
+        preferredDeviceId ||
+        selectedCameraId ||
+        (devices.length > 0 ? (devices.find((d) => /back|rear|environment/i.test(d.label))?.deviceId || devices[0].deviceId) : null);
+
+      if (nextDeviceId) {
         setSelectedCameraId(nextDeviceId);
-        await reader.decodeFromConstraints(
-          {
-            video: {
-              deviceId: { exact: nextDeviceId },
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-            },
-          },
+        // Use decodeFromVideoDevice for more reliable results when we have a device ID
+        await reader.decodeFromVideoDevice(
+          nextDeviceId,
           videoRef.current,
-          (result) => {
-            if (result) handleScan(result.getText());
+          (result, err) => {
+            if (result) {
+              console.log("Scan result:", result.getText());
+              handleScan(result.getText());
+            }
           }
         );
         setCameraReady(true);
       } else {
-        // Fallback for browsers that fail to enumerate but still allow camera streams.
-        try {
-          await reader.decodeFromConstraints(
-            {
-              video: {
-                facingMode: { ideal: "environment" },
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-              },
+        // Fallback for browsers that fail to enumerate or have no devices
+        await reader.decodeFromConstraints(
+          {
+            video: {
+              facingMode: { ideal: "environment" },
             },
-            videoRef.current,
-            (result) => {
-              if (result) handleScan(result.getText());
-            }
-          );
-          setCameraReady(true);
-        } catch {
-          await reader.decodeFromConstraints(
-            {
-              video: {
-                facingMode: { ideal: "user" },
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-              },
-            },
-            videoRef.current,
-            (result) => {
-              if (result) handleScan(result.getText());
-            }
-          );
-          setCameraReady(true);
-        }
+          },
+          videoRef.current,
+          (result, err) => {
+            if (result) handleScan(result.getText());
+          }
+        );
+        setCameraReady(true);
       }
     } catch (error) {
+      console.error("Scanner Error:", error);
       if (window.isSecureContext === false) {
         setCameraError("Camera requires HTTPS or localhost. Use manual entry for now.");
       } else {
-        setCameraError("Unable to access camera. Check browser and Windows camera permissions, then retry.");
+        setCameraError("Unable to access camera. Check permissions and try again.");
       }
     } finally {
       setIsScannerStarting(false);
@@ -311,14 +303,17 @@ export default function VendorPage() {
   };
 
   useEffect(() => {
-    if (viewState !== "scan") {
+    if (viewState === "scan") {
+      startScanner();
+    } else {
       codeReaderRef.current?.reset();
       setCameraReady(false);
-      return;
     }
-    loadVideoDevices();
-    startScanner();
-    return () => codeReaderRef.current?.reset();
+    
+    return () => {
+      codeReaderRef.current?.reset();
+      setCameraReady(false);
+    };
   }, [viewState]);
 
   const handleManualEntry = () => {
@@ -474,17 +469,30 @@ export default function VendorPage() {
             <>
               <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover opacity-100" />
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_65%_18%,rgba(255,255,200,0.45)_0,rgba(255,255,200,0)_28%),linear-gradient(180deg,rgba(0,0,0,0.05),rgba(0,0,0,0.25))]" />
-              <div className="absolute inset-x-3 bottom-4 flex items-center gap-3 rounded-full border border-white/25 bg-black/35 px-4 py-2.5 backdrop-blur-sm">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/15">
-                  <IconScanQr />
-                </span>
-                <p className="text-[12px] leading-4 text-white">
-                  {isScannerStarting
-                    ? "Starting camera scanner..."
-                    : cameraReady
-                      ? "Position student QR code within the frame"
-                      : "Camera not ready. Tap retry or use manual entry."}
-                </p>
+              <div className="absolute inset-x-3 bottom-4 flex flex-col gap-2">
+                <div className="flex items-center gap-3 rounded-full border border-white/25 bg-black/35 px-4 py-2.5 backdrop-blur-sm">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/15">
+                    {cameraError ? <IconBan /> : <IconScanQr />}
+                  </span>
+                  <p className="text-[12px] leading-4 text-white">
+                    {cameraError
+                      ? cameraError
+                      : isScannerStarting
+                        ? "Starting camera scanner..."
+                        : cameraReady
+                          ? "Position student QR code within the frame"
+                          : "Initializing camera..."}
+                  </p>
+                </div>
+                {cameraError && (
+                  <button 
+                    onClick={() => startScanner()}
+                    className="mx-auto flex h-9 items-center gap-2 rounded-full bg-white px-5 text-[11px] font-bold text-[#00A15E] shadow-lg"
+                  >
+                    <IconScanQr className="text-[#00A15E]" />
+                    Retry Camera
+                  </button>
+                )}
               </div>
             </>
           ) : (
