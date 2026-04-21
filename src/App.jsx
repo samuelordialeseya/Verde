@@ -16,33 +16,31 @@ function App() {
   useEffect(() => {
     try {
       console.log("Initializing App Store...");
-      alert("APP MOUNTED - Path: " + location);
       initialize();
     } catch (err) {
-      alert("Store Init Error: " + err.message);
+      console.error("Store Init Error: ", err);
     }
   }, [initialize, location]);
 
-  alert("RENDERING APP COMPONENT...");
-
   return (
     <ErrorBoundary>
-      <Suspense fallback={
-        <div style={{ padding: 50, textAlign: 'center', background: 'white', height: '100vh' }}>
-          <div style={{ width: 40, height: 40, border: '4px solid #00A15E', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }}></div>
-          <p style={{ marginTop: 20, color: '#666' }}>Loading Verde App...</p>
-        </div>
-      }>
+      <Suspense fallback={<div style={{ height: '100vh', background: 'white' }} />}>
         <Routes>
           <Route path="/" element={<Navigate to="/student" replace />} />
           <Route path="/student" element={<StudentPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/vendor" element={<Navigate to="/vendor/1" replace />} />
           <Route path="/vendor/:id" element={<VendorPage />} />
           <Route path="*" element={
-            <div style={{ padding: 50, background: 'red', color: 'white' }}>
-              <h1>404: Route Not Matched</h1>
-              <p>Current Path: {location}</p>
-              <button onClick={() => window.location.href = '/'}>Go Home</button>
+            <div style={{ padding: 50, background: 'white', color: '#333', textAlign: 'center', height: '100vh' }}>
+              <h1 style={{ color: '#00A15E' }}>404: Not Found</h1>
+              <p>We couldn't find the page: <strong>{location}</strong></p>
+              <button 
+                onClick={() => window.location.href = '/'}
+                style={{ marginTop: 20, padding: '10px 20px', background: '#00A15E', color: 'white', border: 'none', borderRadius: 8, fontWeight: 'bold' }}
+              >
+                Go Home
+              </button>
             </div>
           } />
         </Routes>
