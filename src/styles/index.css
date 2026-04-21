@@ -1,27 +1,12 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: "Nunito", "Inter", "ui-sans-serif", "system-ui", "sans-serif";
-  
-  --color-verde-50: #e9f9ef;
-  --color-verde-100: #d2f3de;
-  --color-verde-500: #0f8f4d;
-  --color-verde-600: #0a7b41;
-  --color-verde-700: #076236;
-  --color-verde-900: #07361f;
-
-  --shadow-card: 0 6px 20px rgba(0, 0, 0, 0.08);
+* {
+  box-sizing: border-box;
 }
 
-@layer base {
-  * {
-    box-sizing: border-box;
-  }
-
-  body {
-    margin: 0;
-    font-family: var(--font-sans);
-  }
+body {
+  margin: 0;
+  font-family: Nunito, Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 @layer utilities {
