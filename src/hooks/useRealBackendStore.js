@@ -21,8 +21,8 @@ export function useRealBackendStore() {
     }
 
     // 2. Subscribe to Bounties
-    const unsubBounties = subscribeToBountyFeed((feed) => {
-      setBounties(feed.bounties);
+    const unsubBounties = subscribeToBountyFeed(({ bounties: list }) => {
+      setBounties(list || []);
     });
 
     // 3. Subscribe to Leaderboard
@@ -47,6 +47,13 @@ export function useRealBackendStore() {
 
     // 1. Subscribe to Live Student Balance
     const unsubStudent = subscribeToStudent(student.studentId, (data) => {
+      if (!data) {
+        // ID no longer exists in DB (e.g. after seed), clear it
+        localStorage.removeItem("verde_student_id");
+        localStorage.removeItem("verde_display_name");
+        setStudent({ studentId: null, displayName: "", coinBalance: 0, totalEarned: 0 });
+        return;
+      }
       setStudent(prev => ({ ...prev, ...data }));
     });
 

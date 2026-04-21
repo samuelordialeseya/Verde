@@ -2,7 +2,7 @@ const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const fetch = require("node-fetch");
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Global init removed to prevent cold-start crashes. Init happens inside handler.
 
 exports.verifyEcoAction = onCall(
   {
@@ -10,7 +10,14 @@ exports.verifyEcoAction = onCall(
     region: "asia-southeast1",
   },
   async (request) => {
+    console.log("--- Starting AI Verification ---");
     const { photoUrl, bountyTitle, bountyDescription, bountyInstructions, aiVerificationHint } = request.data;
+
+    // Verify API Key existence at runtime
+    if (!process.env.GEMINI_API_KEY) {
+      console.error("CRITICAL: GEMINI_API_KEY is missing from environment variables!");
+      throw new HttpsError("failed-precondition", "AI service is not configured (API key missing).");
+    }
 
     if (!photoUrl || typeof photoUrl !== "string") {
       throw new HttpsError("invalid-argument", "photoUrl is required");
@@ -21,24 +28,36 @@ exports.verifyEcoAction = onCall(
 
     let imageBase64;
     try {
+      console.log(`Fetching photo: ${photoUrl.substring(0, 50)}...`);
       const response = await fetch(photoUrl);
-      if (!response.ok) throw new Error("Failed to fetch image");
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const buffer = await response.buffer();
       imageBase64 = buffer.toString("base64");
+      console.log("Photo successfully downloaded and converted to Base64");
     } catch (err) {
+      console.error("Image Fetch Error:", err);
       throw new HttpsError("internal", `Image fetch failed: ${err.message}`);
     }
 
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-3-flash-preview",
-      generationConfig: { responseMimeType: "application/json" }
-    });
+    let model;
+    try {
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      model = genAI.getGenerativeModel({ 
+        model: "gemini-1.5-flash",
+        generationConfig: { responseMimeType: "application/json" }
+      });
+      console.log("Gemini Model initialized successfully");
+    } catch (err) {
+      console.error("Model Init Error:", err);
+      throw new HttpsError("internal", `Failed to initialize AI model: ${err.message}`);
+    }
 
     const prompt = buildVerificationPrompt(bountyTitle, bountyDescription, bountyInstructions, aiVerificationHint);
 
     let geminiResponse;
     try {
+      console.log("Sending request to Gemini API...");
       const result = await model.generateContent([
         prompt,
         {
@@ -50,11 +69,15 @@ exports.verifyEcoAction = onCall(
       ]);
 
       geminiResponse = result.response.text();
+      console.log("Gemini API Response received successfully");
     } catch (err) {
+      console.error("Gemini API Error:", err);
       throw new HttpsError("internal", `Gemini API error: ${err.message}`);
     }
 
-    return parseGeminiResponse(geminiResponse);
+    const parsed = parseGeminiResponse(geminiResponse);
+    console.log(`Verification Complete - Verdict: ${parsed.verdict}`);
+    return parsed;
   }
 );
 

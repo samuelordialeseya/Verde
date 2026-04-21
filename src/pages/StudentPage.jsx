@@ -64,6 +64,7 @@ function StudentPage() {
   const [selectedVoucher, setSelectedVoucher] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Safe countdown timer for QR code expiry
   useEffect(() => {
@@ -100,14 +101,17 @@ function StudentPage() {
   }, []);
 
   const bounties = useMemo(() => {
-    const base = store.bounties.filter((b) => b.isActive);
+    const list = store.bounties || [];
+    if (!Array.isArray(list)) return [];
+    const base = list.filter((b) => b.isActive);
     return themeTab === "All" ? base : base.filter((b) => b.theme === themeTab.toLowerCase());
   }, [store.bounties, themeTab]);
 
-  const leaderboard = useMemo(
-    () => store.leaderboard.slice().sort((a, b) => b.totalEarned - a.totalEarned),
-    [store.leaderboard]
-  );
+  const leaderboard = useMemo(() => {
+    const list = store.leaderboard || [];
+    if (!Array.isArray(list)) return [];
+    return list.slice().sort((a, b) => b.totalEarned - a.totalEarned);
+  }, [store.leaderboard]);
 
   const topContributors = useMemo(
     () =>
@@ -125,14 +129,29 @@ function StudentPage() {
 
   const submit = async (bounty) => {
     if (!selectedFile) return;
+    if (!bounty) {
+      setError("Please select a bounty first.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(""); // Clear previous errors
+
     try {
       const response = await store.submitBounty(bounty.id, selectedFile);
       if (!response || response.error) {
         setError(response?.error || "Submission failed.");
+        setIsSubmitting(false);
         return;
       }
       setResult({ ...response, geminiReason: null, geminiLoading: true });
       setActiveScreen("result");
+      
+      // Cleanup submission state after moving to result screen
+      setIsSubmitting(false);
+      setSelectedFile(null);
+      setPreviewUrl(null);
+
       const geminiReason = await fetchGeminiVerdictSentence({
         bountyTitle: bounty.title,
         verdict: response.verdict,
@@ -144,7 +163,16 @@ function StudentPage() {
       );
     } catch (err) {
       console.error("Submit failed:", err);
-      setError("Error submitting photo: " + err.message);
+      let msg = err.message;
+      if (msg.includes("functions/not-found")) {
+        msg = "Cloud Function not found. Please ensure your backend is deployed.";
+      } else if (msg.includes("storage/unauthorized") || msg.includes("storage/retry-limit-exceeded")) {
+        msg = "Storage permission denied. Please check your storage.rules.";
+      } else if (msg.includes("ALREADY_CLAIMED")) {
+        msg = "You have already submitted a claim for this bounty.";
+      }
+      setError("Submission Failed: " + msg);
+      setIsSubmitting(false);
     }
   };
 
@@ -162,7 +190,10 @@ function StudentPage() {
     }
   };
 
-  const allBounties = useMemo(() => store.bounties, [store.bounties]);
+  const allBounties = useMemo(() => {
+    const list = store.bounties || [];
+    return Array.isArray(list) ? list : [];
+  }, [store.bounties]);
 
   const handleNavSelect = (item) => {
     if (item === "Home") setActiveScreen("home");
@@ -414,13 +445,20 @@ function StudentPage() {
                 
                 <button
                   type="button"
-                  onClick={() => submit(selectedBounty || store.bounties[0])}
-                  disabled={!selectedFile}
+                  onClick={() => submit(selectedBounty || (store.bounties && store.bounties[0]))}
+                  disabled={!selectedFile || isSubmitting}
                   className={`mt-3 w-full rounded-2xl py-3 text-[12px] font-semibold transition-colors ${
-                    selectedFile ? "bg-[#007f43] text-white" : "bg-[#dfe5e8] text-[#7b848c] cursor-not-allowed"
+                    selectedFile && !isSubmitting ? "bg-[#007f43] text-white" : "bg-[#dfe5e8] text-[#7b848c] cursor-not-allowed"
                   }`}
                 >
-                  ⚙ Submit for AI Verification
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                       <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                         <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+                       </svg>
+                       Verifying with Gemini AI...
+                    </span>
+                  ) : "⚙ Submit for AI Verification"}
                 </button>
                 {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
                 <div className="mt-2 text-center text-[8px] tracking-[0.2em] text-[#adb5bc]">VERDE BLOCKCHAIN SECURED</div>
