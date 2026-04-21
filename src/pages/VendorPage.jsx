@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { BrowserMultiFormatReader } from "@zxing/library";
+import { BarcodeFormat, BrowserMultiFormatReader, DecodeHintType } from "@zxing/library";
 import { format } from "date-fns";
 import { useAppStore } from "../context/appStore";
 import PhoneFrame from "../components/PhoneFrame";
@@ -180,38 +180,142 @@ export default function VendorPage() {
   const [resultData, setResultData] = useState(null);
   const [showManualCard, setShowManualCard] = useState(false);
   const [manualToken, setManualToken] = useState("");
+  const [cameraError, setCameraError] = useState("");
+  const [isScannerStarting, setIsScannerStarting] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [availableCameras, setAvailableCameras] = useState([]);
+  const [selectedCameraId, setSelectedCameraId] = useState("");
   const videoRef = useRef(null);
   const codeReaderRef = useRef(null);
 
   const vendorName = id === "1" ? "Main Canteen" : id === "2" ? "Print Shop" : `Vendor ${id}`;
 
   const handleScan = (tokenText) => {
-    const res = consumeRedemptionToken(tokenText);
+    const parsedToken = tokenText.includes("rdm-")
+      ? tokenText.slice(tokenText.indexOf("rdm-")).split(/[\s"&?]/)[0]
+      : tokenText.trim();
+    const res = consumeRedemptionToken(parsedToken);
     setResultData(res);
     setViewState(res.ok ? "success" : "error");
     codeReaderRef.current?.reset();
   };
 
+  const loadVideoDevices = async () => {
+    try {
+      // Prompt permission first so labels/devices are available in Chromium.
+      const warmupStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      warmupStream.getTracks().forEach((track) => track.stop());
+      const devices = await BrowserMultiFormatReader.listVideoInputDevices();
+      setAvailableCameras(devices);
+      if (!devices.length) {
+        setSelectedCameraId("");
+        return devices;
+      }
+      if (selectedCameraId && devices.some((d) => d.deviceId === selectedCameraId)) {
+        return devices;
+      }
+      const rearDevice =
+        devices.find((d) => /back|rear|environment/i.test(d.label)) ||
+        devices.find((d) => /camera 0|camera1|cam 0/i.test(d.label)) ||
+        devices[0];
+      setSelectedCameraId(rearDevice.deviceId);
+      return devices;
+    } catch {
+      setAvailableCameras([]);
+      setSelectedCameraId("");
+      return [];
+    }
+  };
+
+  const startScanner = async (preferredDeviceId) => {
+    if (viewState !== "scan" || !videoRef.current) return;
+    setIsScannerStarting(true);
+    setCameraError("");
+    setCameraReady(false);
+    codeReaderRef.current?.reset();
+
+    const hints = new Map();
+    hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE]);
+    hints.set(DecodeHintType.TRY_HARDER, true);
+    const reader = new BrowserMultiFormatReader(hints);
+    codeReaderRef.current = reader;
+    try {
+      const devices = await loadVideoDevices();
+      if (devices.length) {
+        const nextDeviceId =
+          preferredDeviceId ||
+          selectedCameraId ||
+          devices.find((d) => /back|rear|environment/i.test(d.label))?.deviceId ||
+          devices[0].deviceId;
+        setSelectedCameraId(nextDeviceId);
+        await reader.decodeFromConstraints(
+          {
+            video: {
+              deviceId: { exact: nextDeviceId },
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+          },
+          videoRef.current,
+          (result) => {
+            if (result) handleScan(result.getText());
+          }
+        );
+        setCameraReady(true);
+      } else {
+        // Fallback for browsers that fail to enumerate but still allow camera streams.
+        try {
+          await reader.decodeFromConstraints(
+            {
+              video: {
+                facingMode: { ideal: "environment" },
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+              },
+            },
+            videoRef.current,
+            (result) => {
+              if (result) handleScan(result.getText());
+            }
+          );
+          setCameraReady(true);
+        } catch {
+          await reader.decodeFromConstraints(
+            {
+              video: {
+                facingMode: { ideal: "user" },
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+              },
+            },
+            videoRef.current,
+            (result) => {
+              if (result) handleScan(result.getText());
+            }
+          );
+          setCameraReady(true);
+        }
+      }
+    } catch (error) {
+      if (window.isSecureContext === false) {
+        setCameraError("Camera requires HTTPS or localhost. Use manual entry for now.");
+      } else {
+        setCameraError("Unable to access camera. Check browser and Windows camera permissions, then retry.");
+      }
+    } finally {
+      setIsScannerStarting(false);
+    }
+  };
+
   useEffect(() => {
     if (viewState !== "scan") {
       codeReaderRef.current?.reset();
+      setCameraReady(false);
       return;
     }
-    const reader = new BrowserMultiFormatReader();
-    codeReaderRef.current = reader;
-    const run = async () => {
-      try {
-        const devices = await BrowserMultiFormatReader.listVideoInputDevices();
-        if (!devices.length || !videoRef.current) return;
-        reader.decodeFromVideoDevice(devices[0].deviceId, videoRef.current, (result) => {
-          if (result) handleScan(result.getText());
-        });
-      } catch {
-        // camera unavailable in non-https demos
-      }
-    };
-    run();
-    return () => reader.reset();
+    loadVideoDevices();
+    startScanner();
+    return () => codeReaderRef.current?.reset();
   }, [viewState]);
 
   const handleManualEntry = () => {
@@ -353,8 +457,49 @@ export default function VendorPage() {
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/15">
               <IconScanQr />
             </span>
-            <p className="text-[12px] leading-4 text-white">Position student QR<br />code within the frame</p>
+            <p className="text-[12px] leading-4 text-white">
+              {isScannerStarting
+                ? "Starting camera scanner..."
+                : cameraReady
+                  ? "Position student QR code within the frame"
+                  : "Camera not ready. Tap retry or use manual entry."}
+            </p>
           </div>
+          {cameraError && (
+            <div className="absolute inset-x-3 top-3 rounded-xl border border-[#fecaca] bg-[#fee2e2]/90 px-3 py-2 text-[10px] font-semibold text-[#991b1b]">
+              {cameraError}
+            </div>
+          )}
+          {!!availableCameras.length && (
+            <div className="absolute inset-x-3 top-3 z-10 flex items-center gap-2">
+              <select
+                value={selectedCameraId}
+                onChange={(e) => {
+                  const nextId = e.target.value;
+                  setSelectedCameraId(nextId);
+                  startScanner(nextId);
+                }}
+                className="h-7 min-w-0 flex-1 rounded-full border border-white/60 bg-white/90 px-3 text-[10px] font-semibold text-[#1f2937]"
+              >
+                {availableCameras.map((cam, index) => (
+                  <option key={cam.deviceId} value={cam.deviceId}>
+                    {cam.label || `Camera ${index + 1}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          {!cameraReady && (
+            <button
+              type="button"
+              onClick={() => startScanner(selectedCameraId)}
+              className={`absolute right-3 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold tracking-[0.08em] text-[#0a7e49] uppercase ${
+                availableCameras.length ? "top-11" : "top-3"
+              }`}
+            >
+              Retry Camera
+            </button>
+          )}
         </section>
 
         <article className="mt-7 flex overflow-hidden rounded-[24px] border border-[#eef1f4] bg-white shadow-sm">

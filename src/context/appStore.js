@@ -17,6 +17,7 @@ const ls = {
 };
 
 const uid = () => Math.random().toString(36).slice(2, 10);
+const isTokenExpired = (token) => Boolean(token?.expiresAt && Date.now() > token.expiresAt);
 
 export const useAppStore = create((set, get) => ({
   studentId: null,
@@ -134,7 +135,8 @@ export const useAppStore = create((set, get) => ({
 
   createRedemptionToken: (amount) => {
     const state = get();
-    if (state.pendingRedemption && state.pendingRedemption.status === "pending") {
+    const pending = state.pendingRedemption;
+    if (pending && pending.status === "pending" && !isTokenExpired(pending)) {
       return { error: "You already have a pending QR token." };
     }
     if (amount < 10) return { error: "Minimum redemption is 10 coins." };
@@ -158,7 +160,12 @@ export const useAppStore = create((set, get) => ({
     const state = get();
     const token = state.pendingRedemption;
     if (!token || token.id !== tokenId) return { ok: false, message: "Token not found.", errorType: "not_found" };
-    if (Date.now() > token.expiresAt) return { ok: false, message: "Token expired.", errorType: "expired", token };
+    if (isTokenExpired(token)) {
+      const expiredToken = { ...token, status: "expired" };
+      set({ pendingRedemption: expiredToken });
+      ls.set("verde-pending-redemption", expiredToken);
+      return { ok: false, message: "Token expired.", errorType: "expired", token: expiredToken };
+    }
     if (token.status !== "pending") return { ok: false, message: "Token already redeemed.", errorType: "already_redeemed", token };
     if (state.coinBalance < token.amount) return { ok: false, message: "Insufficient student balance.", errorType: "low_balance", token };
 
