@@ -1,0 +1,6 @@
+---
+pid: 9016
+cwd: |
+  C:\Users\ruthm
+---
+PS C:\Users\ruthm>

@@ -1,11 +1,10 @@
-import { useMemo, useState, useEffect, useCallback } from "react";
-import _QRCode from "react-qr-code";
-const QRCode = _QRCode.default || _QRCode.QRCode || _QRCode;
+import { useMemo, useState } from "react";
+import QRCode from "react-qr-code";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import PhoneFrame from "../components/PhoneFrame";
 import BottomNav from "../components/BottomNav";
 import NameModal from "../components/NameModal";
-import { useRealBackendStore as useAppStore } from "../hooks/useRealBackendStore";
+import { useAppStore } from "../context/appStore";
 import { fetchGeminiVerdictSentence } from "../services/geminiReason";
 
 const tabs = ["All", "Canteen", "Energy", "Waste"];
@@ -60,44 +59,6 @@ function StudentPage() {
   const [result, setResult] = useState(null);
   const redeemAmount = 50;
   const [error, setError] = useState("");
-  const [countdown, setCountdown] = useState("");
-  const [selectedVoucher, setSelectedVoucher] = useState(null);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-
-  // Safe countdown timer for QR code expiry
-  useEffect(() => {
-    if (!store.pendingRedemption?.expiresAt) {
-      setCountdown("");
-      return;
-    }
-    const tick = () => {
-      const ms = Number(store.pendingRedemption.expiresAt) - Date.now();
-      if (isNaN(ms) || ms <= 0) {
-        setCountdown("Expired");
-        // Clear the expired token from localStorage
-        localStorage.removeItem("verde-pending-redemption");
-        return;
-      }
-      const mins = Math.floor(ms / 60000);
-      const secs = Math.floor((ms % 60000) / 1000);
-      setCountdown(`${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`);
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [store.pendingRedemption]);
-
-  // Safe date formatter - never crashes
-  const safeFormat = useCallback((val, fmt) => {
-    try {
-      const d = new Date(val);
-      if (isNaN(d.getTime())) return "--";
-      return format(d, fmt);
-    } catch {
-      return "--";
-    }
-  }, []);
 
   const bounties = useMemo(() => {
     const base = store.bounties.filter((b) => b.isActive);
@@ -124,42 +85,23 @@ function StudentPage() {
   }, [leaderboard]);
 
   const submit = async (bounty) => {
-    if (!selectedFile) return;
-    try {
-      const response = await store.submitBounty(bounty.id, selectedFile);
-      if (!response || response.error) {
-        setError(response?.error || "Submission failed.");
-        return;
-      }
-      setResult({ ...response, geminiReason: null, geminiLoading: true });
-      setActiveScreen("result");
-      const geminiReason = await fetchGeminiVerdictSentence({
-        bountyTitle: bounty.title,
-        verdict: response.verdict,
-        confidence: response.confidence,
-        baseReason: response.reason,
-      });
-      setResult((prev) =>
-        prev && prev.id === response.id ? { ...prev, geminiReason, geminiLoading: false } : prev
-      );
-    } catch (err) {
-      console.error("Submit failed:", err);
-      setError("Error submitting photo: " + err.message);
-    }
+    const response = store.submitBounty(bounty.id, "proof.jpg");
+    setResult({ ...response, geminiReason: null, geminiLoading: true });
+    setActiveScreen("result");
+    const geminiReason = await fetchGeminiVerdictSentence({
+      bountyTitle: bounty.title,
+      verdict: response.verdict,
+      confidence: response.confidence,
+      baseReason: response.reason,
+    });
+    setResult((prev) =>
+      prev && prev.id === response.id ? { ...prev, geminiReason, geminiLoading: false } : prev
+    );
   };
 
-  const createQR = async () => {
-    try {
-      const token = await store.createRedemptionToken(redeemAmount);
-      if (!token) {
-        setError("Failed to generate QR code.");
-        return;
-      }
-      setError(token.error || "");
-    } catch (err) {
-      setError("QR Error: " + (err?.message || "Unknown error"));
-      console.error("createQR failed:", err);
-    }
+  const createQR = () => {
+    const token = store.createRedemptionToken(redeemAmount);
+    setError(token.error || "");
   };
 
   const allBounties = useMemo(() => store.bounties, [store.bounties]);
@@ -169,14 +111,6 @@ function StudentPage() {
     if (item === "Bounties") setActiveScreen("bounties");
     if (item === "Wallet") setActiveScreen("wallet");
     if (item === "Rankings") setActiveScreen("leaderboard");
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
   };
 
   const isYouRow = (displayName) =>
@@ -373,56 +307,25 @@ function StudentPage() {
                   $ Estimated Reward {selectedBounty?.coinReward || 25} coins
                 </div>
                 <div className="mt-4 text-[12px] font-semibold tracking-[0.12em] text-[#454d56]">EVIDENCE</div>
-                {previewUrl ? (
-                  <div className="relative mt-2 h-48 overflow-hidden rounded-3xl bg-[#1e2329]">
-                    <img src={previewUrl} alt="Evidence Preview" className="h-full w-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedFile(null);
-                        setPreviewUrl(null);
-                      }}
-                      className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-[12px] font-semibold text-white backdrop-blur-[2px]"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                        <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      Remove
-                    </button>
-                  </div>
-                ) : (
-                  <div className="relative mt-2 flex h-48 flex-col items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed border-[#d1d9e0] bg-[#f9fafa]">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#8a959d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-2">
-                       <path d="M21.2 15c.7-1.2 1-2.5.7-3.9-.6-2-2.4-3.5-4.4-3.5h-1.2c-.7-3-3.2-5.2-6.2-5.6-3-.3-5.9 1.3-7.3 4-1.2 2.5-1 6.5.5 8.8m8.7-1.6V21"/>
-                       <path d="M16 16l-4-4-4 4"/>
+                <div className="relative mt-2 h-48 overflow-hidden rounded-3xl bg-[linear-gradient(160deg,#3b2e1e,#8f6238)]">
+                  <button
+                    type="button"
+                    className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-[12px] font-semibold text-white backdrop-blur-[2px]"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                      <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9M20 20v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    <div className="text-[14px] font-semibold text-[#454d56]">Upload Photo</div>
-                    <div className="mt-1 text-[11px] text-[#8a959d]">Take a picture or choose file</div>
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      capture="environment"
-                      onChange={handleFileChange}
-                      className="absolute inset-0 cursor-pointer opacity-0"
-                    />
-                  </div>
-                )}
-                
-                {selectedFile && (
-                  <div className="mt-3 rounded-2xl bg-[#ebfff3] px-3 py-2 text-[12px] text-[#3a8f60]">Photo attached, ready for AI analysis</div>
-                )}
-                
+                    Retake
+                  </button>
+                </div>
+                <div className="mt-3 rounded-2xl bg-[#ebfff3] px-3 py-2 text-[12px] text-[#3a8f60]">AI is analyzing your photo</div>
                 <button
                   type="button"
                   onClick={() => submit(selectedBounty || store.bounties[0])}
-                  disabled={!selectedFile}
-                  className={`mt-3 w-full rounded-2xl py-3 text-[12px] font-semibold transition-colors ${
-                    selectedFile ? "bg-[#007f43] text-white" : "bg-[#dfe5e8] text-[#7b848c] cursor-not-allowed"
-                  }`}
+                  className="mt-3 w-full rounded-2xl bg-[#dfe5e8] py-3 text-[12px] font-semibold text-[#7b848c]"
                 >
                   ⚙ Submit for AI Verification
                 </button>
-                {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
                 <div className="mt-2 text-center text-[8px] tracking-[0.2em] text-[#adb5bc]">VERDE BLOCKCHAIN SECURED</div>
               </article>
               <button type="button" onClick={() => setActiveScreen("home")} className="w-full rounded-2xl border border-[#dfe5e8] py-2 text-sm text-[#5f6b75]">
@@ -476,15 +379,7 @@ function StudentPage() {
                   </button>
                 )}
                 {result.verdict === "rejected" && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedFile(null);
-                      setPreviewUrl(null);
-                      setActiveScreen("submit");
-                    }}
-                    className="mt-3 w-full rounded-xl bg-[#007f43] py-2.5 text-[14px] font-semibold text-white"
-                  >
+                  <button type="button" onClick={() => setActiveScreen("submit")} className="mt-3 w-full rounded-xl bg-[#007f43] py-2.5 text-[14px] font-semibold text-white">
                     Retake Photo
                   </button>
                 )}
@@ -627,52 +522,33 @@ function StudentPage() {
                   <span className="font-semibold text-[#008a4d]">₱50 = 10% discount</span>
                 </div>
                 <div className="mt-3 space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedVoucher("canteen")}
-                    className={`w-full flex items-center justify-between rounded-2xl px-3 py-2 cursor-pointer transition-all ${
-                      selectedVoucher === "canteen" ? "bg-[#c3f7d6] ring-2 ring-inset ring-[#007f43]" : "bg-[#eaffee]"
-                    }`}
-                  >
+                  <div className="flex items-center justify-between rounded-2xl bg-[#eaffee] px-3 py-2">
                     <div className="flex items-center gap-2">
-                      <div className="grid h-8 w-8 place-items-center rounded-lg bg-[#007f43] text-white">%</div>
-                      <div className="text-left">
+                      <div className="grid h-8 w-8 place-items-center rounded-lg bg-[#c3f7d6] text-[#007f43]">%</div>
+                      <div>
                         <div className="text-[12px] font-semibold leading-none text-[#1f2932]">Main Canteen</div>
                         <div className="mt-0.5 text-[10px] font-semibold text-[#2f4f44]">10% discount</div>
                       </div>
                     </div>
-                    <span className="text-[11px] font-semibold text-[#1f2932] shrink-0">
-                      {selectedVoucher === "canteen" ? "Selected ✓" : "Select"}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedVoucher("printshop")}
-                    className={`w-full flex items-center justify-between rounded-2xl px-3 py-2 cursor-pointer transition-all ${
-                      selectedVoucher === "printshop" ? "bg-[#c3f7d6] ring-2 ring-inset ring-[#007f43]" : "bg-[#eaffee]"
-                    }`}
-                  >
+                    <button type="button" className="text-[11px] font-semibold text-[#1f2932]">
+                      Use now
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between rounded-2xl bg-[#eaffee] px-3 py-2">
                     <div className="flex items-center gap-2">
-                      <div className="grid h-8 w-8 place-items-center rounded-lg bg-[#007f43] text-white">%</div>
-                      <div className="text-left">
+                      <div className="grid h-8 w-8 place-items-center rounded-lg bg-[#c3f7d6] text-[#007f43]">%</div>
+                      <div>
                         <div className="text-[12px] font-semibold leading-none text-[#1f2932]">Print Shop</div>
                         <div className="mt-0.5 text-[10px] font-semibold text-[#2f4f44]">10% discount</div>
                       </div>
                     </div>
-                    <span className="text-[11px] font-semibold text-[#1f2932] shrink-0">
-                      {selectedVoucher === "printshop" ? "Selected ✓" : "Select"}
-                    </span>
-                  </button>
+                    <button type="button" className="text-[11px] font-semibold text-[#1f2932]">
+                      Use now
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={createQR}
-                  disabled={!selectedVoucher || store.pendingRedemption}
-                  className={`mt-3 w-full rounded-2xl py-3 text-[14px] font-semibold leading-none tracking-[-0.02em] text-white transition-opacity ${
-                    selectedVoucher && !store.pendingRedemption ? "bg-[#007f43] opacity-100" : "bg-gray-400 opacity-50 cursor-not-allowed"
-                  }`}
-                >
-                  {store.pendingRedemption ? "QR Code Active Below" : selectedVoucher ? "Generate QR Code →" : "Select a voucher first"}
+                <button type="button" onClick={createQR} className="mt-3 w-full rounded-2xl bg-[#007f43] py-3 text-[14px] font-semibold leading-none tracking-[-0.02em] text-white">
+                  Generate QR Code →
                 </button>
                 {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
                 {store.pendingRedemption && (
@@ -680,21 +556,11 @@ function StudentPage() {
                     <div className="text-center text-[16px] text-[#64717b]">Username</div>
                     <div className="text-center text-[15px] font-semibold leading-none text-[#008a4d]">10% discount</div>
                     <div className="mt-2 grid place-items-center rounded-xl bg-[#f6f9fb] p-3">
-                      <QRCode size={130} value={store.pendingRedemption.id || ""} />
+                      <QRCode size={130} value={store.pendingRedemption.id} />
                     </div>
                     <div className="mt-2 text-center text-[13px] font-semibold text-[#f29a2b]">
-                      ◷ Expires in {countdown || "--"}
+                      ◷ Expires in {format(new Date(store.pendingRedemption.expiresAt), "mm:ss")}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        localStorage.removeItem("verde-pending-redemption");
-                        window.location.reload(); // Simple reload to clear store state since state is bound to hook initialization
-                      }}
-                      className="mt-3 block w-full rounded-xl bg-[#fcedebee] py-2 text-center text-[12px] font-semibold text-[#da3c3c]"
-                    >
-                      Cancel QR Code
-                    </button>
                   </div>
                 )}
               </div>
@@ -716,7 +582,7 @@ function StudentPage() {
                         <ActivityIcon tx={tx} />
                         <div className="min-w-0">
                           <div className="truncate text-[12px] font-semibold text-[#1f2932]">{tx.description}</div>
-                          <div className="text-[9px] text-[#77828b]">{safeFormat(tx.timestamp, "MMM d, h:mm a")}</div>
+                          <div className="text-[9px] text-[#77828b]">{format(new Date(tx.timestamp), "MMM d, h:mm a")}</div>
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
