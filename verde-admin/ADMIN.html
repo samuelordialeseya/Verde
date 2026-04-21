@@ -1,0 +1,2442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verde Admin — Digital Sustainability Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Tailwind-aligned tokens (sidebar reference) */
+      --zinc-100: #f4f4f5;
+      --zinc-200: #e4e4e7;
+      --zinc-50: #fafafa;
+      --teal-800: #115e59;
+      --emerald-200: #a7f3d0;
+      --emerald-900: #064e3b;
+      --neutral-700: #404040;
+      --nav-active-shadow: 0 12px 32px -4px rgba(25, 28, 28, 0.06);
+      --sidebar-w: 288px;
+      --stone-50: #fafaf9;
+      --platform-title: #0f5238;
+      --gray-200: #e5e5e5;
+      --neutral-500: #737373;
+      --green-300: #86efac;
+      --green-950: #052e16;
+      --red-700: #b91c1c;
+      --amber-600: #d97706;
+      --stone-300: #d6d3d1;
+
+      --bg-app: var(--stone-50);
+      --bg-sidebar: var(--zinc-100);
+      --bg-sidebar-hover: #ebebed;
+      --bg-card: #ffffff;
+      --border: #e4e4e7;
+      --border-soft: #f4f4f5;
+      --text: #18181b;
+      --text-muted: #52525b;
+      --verde: #0f766e;
+      --verde-dark: var(--emerald-900);
+      --verde-soft: #d1fae5;
+      --verde-glow: #14b8a6;
+      --accent-warm: #b45309;
+      --accent-up: #047857;
+      --accent-pending: #b45309;
+      --accent-info: #2563eb;
+      --shadow-sm: 0 1px 2px rgba(24, 24, 27, 0.06);
+      --shadow-md: 0 8px 24px rgba(24, 24, 27, 0.08);
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --space-xs: 6px;
+      --space-sm: 10px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --font-ui: "Manrope", system-ui, sans-serif;
+      --font-brand: "Epilogue", var(--font-ui);
+      --font-display: "Epilogue", var(--font-ui);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--font-ui);
+      font-size: 14px;
+      line-height: 1.45;
+      color: var(--text);
+      background: var(--bg-app);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+
+    /* Sidebar — matches reference: zinc-100, Epilogue + Manrope, teal logo, white active row */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--bg-sidebar);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      border-right: 1px solid var(--zinc-200);
+    }
+    .sidebar-brand-block {
+      align-self: stretch;
+      padding-bottom: 40px;
+    }
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+    .brand-logo {
+      position: relative;
+      width: 36px;
+      height: 40px;
+      border-radius: 8px;
+      background: var(--teal-800);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .brand-logo-leaf {
+      position: absolute;
+      right: 3.3px;
+      bottom: 3.3px;
+      width: 30px;
+      height: 30px;
+      object-fit: contain;
+      pointer-events: none;
+    }
+    .brand-logo-gear {
+      position: absolute;
+      left: 6px;
+      top: 10px;
+      width: 19px;
+      height: auto;
+      pointer-events: none;
+    }
+    .brand-logo-bell {
+      position: absolute;
+      right: 4px;
+      top: 4px;
+      width: 11px;
+      height: auto;
+      pointer-events: none;
+    }
+    .brand-text-col {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0;
+      min-width: 0;
+    }
+    .brand-title {
+      margin: 0;
+      font-family: var(--font-brand);
+      font-weight: 700;
+      font-size: 1.25rem;
+      line-height: 1.75rem;
+      color: var(--emerald-900);
+      letter-spacing: -0.01em;
+    }
+    .brand-sub {
+      margin: 0;
+      font-family: var(--font-ui);
+      font-weight: 700;
+      font-size: 10px;
+      line-height: 1rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--neutral-700);
+    }
+    .nav-block {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-self: stretch;
+    }
+    .nav-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .nav-item button {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--neutral-700);
+      font-family: var(--font-ui);
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .nav-item button:hover {
+      background: rgba(255, 255, 255, 0.55);
+    }
+    .nav-item.is-active button {
+      background: #fff;
+      color: var(--emerald-900);
+      font-weight: 600;
+      box-shadow: var(--nav-active-shadow);
+    }
+    .nav-item.is-active button:hover {
+      background: #fff;
+    }
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: inherit;
+    }
+    .nav-icon svg {
+      display: block;
+      max-width: 20px;
+      max-height: 20px;
+      width: auto;
+      height: auto;
+    }
+    .nav-item[data-nav="leaderboard"] .nav-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+    .nav-item[data-nav="export"] .nav-icon svg {
+      width: 16px;
+      height: 20px;
+    }
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: var(--space-lg);
+      border-top: 1px solid var(--zinc-200);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--teal-800), var(--emerald-900));
+      display: grid;
+      place-items: center;
+      font-family: var(--font-ui);
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .avatar-meta .name {
+      font-family: var(--font-ui);
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--text);
+    }
+    .avatar-meta .role {
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Main shell */
+    .main {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .topbar {
+      align-self: stretch;
+      height: 80px;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      background: rgba(250, 250, 249, 0.8);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border-bottom: 1px solid rgba(228, 228, 231, 0.6);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .search-chrome {
+      width: 100%;
+      max-width: 384px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 10px 16px;
+      background: var(--gray-200);
+      border-radius: 12px;
+      border: none;
+    }
+    .search-chrome .search-ic {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      padding-right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .search-chrome .search-ic svg {
+      width: 14px;
+      height: 14px;
+      color: var(--neutral-500);
+    }
+    .search-chrome input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      background: transparent;
+      font-family: var(--font-ui);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      outline: none;
+    }
+    .search-chrome input::placeholder {
+      color: var(--neutral-500);
+    }
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: none;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--neutral-700);
+    }
+    .icon-btn:hover { background: rgba(0, 0, 0, 0.04); }
+    .icon-btn svg { width: 18px; height: 18px; }
+    .topbar-divider {
+      width: 1px;
+      height: 32px;
+      background: rgba(214, 211, 209, 0.2);
+      margin: 0 8px;
+    }
+    .topbar-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-left: 8px;
+    }
+    .topbar-user-meta {
+      text-align: right;
+    }
+    .topbar-user-meta .nm {
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 12px;
+      color: #18181b;
+    }
+    .topbar-user-meta .role {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 500;
+      line-height: 16px;
+      color: var(--neutral-700);
+      margin-top: 2px;
+    }
+    .avatar-ring {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      object-fit: cover;
+      box-shadow: 0 0 0 2px rgba(45, 106, 79, 0.2);
+    }
+    .btn-new-bounty {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(180deg, var(--emerald-900) 0%, var(--teal-800) 100%);
+      color: #fff;
+      font-family: var(--font-ui);
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.5rem;
+      cursor: pointer;
+      box-shadow:
+        0 4px 6px -4px rgba(0, 0, 0, 0.1),
+        0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      flex-shrink: 0;
+    }
+    .btn-new-bounty:hover {
+      filter: brightness(1.05);
+    }
+    .btn-new-bounty img {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+    .btn-export-data {
+      height: 56px;
+      padding: 0 24px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      border-radius: 12px;
+      background: transparent;
+      font-family: var(--font-ui);
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.5rem;
+      color: var(--teal-800);
+      cursor: pointer;
+    }
+    .btn-export-data:hover {
+      background: rgba(17, 94, 89, 0.06);
+    }
+    .btn-export-data svg {
+      color: var(--teal-800);
+    }
+    h1.title-dash-platform {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 3rem;
+      line-height: 1.05;
+      font-weight: 700;
+      color: var(--platform-title);
+    }
+    .page-head-dash {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-lg);
+      margin-bottom: var(--space-xl);
+    }
+    .page-head-dash .sub {
+      margin: 8px 0 0;
+      max-width: 560px;
+      font-family: var(--font-ui);
+      font-size: 1rem;
+      line-height: 1.5rem;
+      font-weight: 400;
+      color: var(--neutral-700);
+    }
+    .dash-feed-shell {
+      padding: 4px;
+      background: var(--zinc-100);
+      border-radius: 24px;
+      overflow: hidden;
+    }
+    .dash-feed-inner {
+      padding: 32px;
+      background: #fff;
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+    .dash-feed-hd {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .dash-feed-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dash-feed-title .wave {
+      width: 20px;
+      height: 14px;
+      background: #065f46;
+      border-radius: 2px;
+    }
+    .dash-feed-title h2 {
+      margin: 0;
+      font-family: var(--font-ui);
+      font-size: 1.25rem;
+      line-height: 1.75rem;
+      font-weight: 700;
+      color: var(--emerald-900);
+    }
+    .pill-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pill-tabs button {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: none;
+      background: var(--gray-200);
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 16px;
+      color: var(--neutral-700);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pill-tabs button img {
+      width: 14px;
+      height: 14px;
+      display: block;
+      flex-shrink: 0;
+    }
+    .pill-tabs button.is-on {
+      background: #d4d4d4;
+      color: #262626;
+    }
+    .feed-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding-bottom: 8px;
+    }
+    .feed-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+    }
+    .feed-avatar-wrap {
+      position: relative;
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+    }
+    .feed-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 999px;
+      background: #fff;
+      border: 1px solid var(--zinc-200);
+    }
+    .feed-badge {
+      position: absolute;
+      right: -4px;
+      bottom: -4px;
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      outline: 2px solid #fff;
+      outline-offset: -2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .feed-badge svg,
+    .feed-badge .dot {
+      width: 8px;
+      height: 8px;
+      background: #fff;
+      border-radius: 1px;
+    }
+    .feed-badge.emerald { background: #047857; }
+    .feed-badge.teal { background: var(--teal-800); }
+    .feed-badge.dark { background: var(--emerald-900); }
+    .feed-badge.red-dot .dot { background: #b91c1c; width: 10px; height: 8px; border-radius: 1px; }
+    .feed-badge.lime { background: var(--green-300); }
+    .feed-badge.lime .mini { width: 8px; height: 8px; background: var(--emerald-900); border-radius: 2px; }
+    .feed-body {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .feed-line1 {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .feed-line1 .msg {
+      font-family: var(--font-ui);
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+      color: var(--neutral-700);
+    }
+    .feed-line1 .msg strong {
+      color: #18181b;
+      font-weight: 700;
+    }
+    .feed-time {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--neutral-500);
+      white-space: nowrap;
+    }
+    .feed-line2 {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+    }
+    .feed-coins {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      font-weight: 700;
+      line-height: 1rem;
+      color: var(--emerald-900);
+    }
+    .feed-coins .mini-ic {
+      width: 12px;
+      height: 12px;
+      background: var(--emerald-900);
+      border-radius: 2px;
+    }
+    .feed-coins.red {
+      color: var(--red-700);
+    }
+    .feed-coins.red .mini-ic {
+      background: var(--red-700);
+      height: 10px;
+    }
+    .feed-tag {
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--gray-200);
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      font-weight: 500;
+      line-height: 1rem;
+      color: var(--neutral-700);
+    }
+    .feed-log-btn {
+      margin-top: 8px;
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(6, 78, 59, 0.1);
+      background: transparent;
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--emerald-900);
+      cursor: pointer;
+    }
+    .sdg-card-v2 {
+      padding: 24px;
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 12px 32px -4px rgba(25, 28, 28, 0.06);
+      display: flex;
+      flex-direction: column;
+    }
+    .sdg-card-v2-hd {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 24px;
+    }
+    .sdg-card-v2-hd span {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--emerald-900);
+    }
+    .sdg-bar-block {
+      margin-bottom: 20px;
+    }
+    .sdg-bar-block:last-of-type {
+      margin-bottom: 0;
+    }
+    .sdg-bar-labels {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+    .sdg-bar-labels .name {
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      font-weight: 700;
+      line-height: 1rem;
+      color: #18181b;
+    }
+    .sdg-bar-labels .ct {
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      font-weight: 700;
+      line-height: 1rem;
+      color: var(--emerald-900);
+      text-align: right;
+    }
+    .sdg-track {
+      height: 10px;
+      border-radius: 999px;
+      background: var(--gray-200);
+      overflow: hidden;
+    }
+    .sdg-track > span {
+      display: block;
+      height: 100%;
+      border-radius: 999px;
+    }
+    .sdg-card-v2-ft {
+      margin-top: 112px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(214, 211, 209, 0.1);
+      text-align: center;
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--neutral-700);
+    }
+    .lb-head-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .lb-head-row h1 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 3rem;
+      line-height: 2.5rem;
+      font-weight: 700;
+      color: var(--emerald-900);
+    }
+    .lb-head-row .deck {
+      max-width: 576px;
+      font-family: var(--font-ui);
+      font-size: 1rem;
+      line-height: 1.5rem;
+      color: var(--neutral-700);
+      margin-top: 8px;
+    }
+    .lb-seg {
+      display: flex;
+      padding: 4px;
+      background: var(--zinc-100);
+      border-radius: 12px;
+      gap: 0;
+    }
+    .lb-seg button {
+      padding: 8px 24px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      font-family: var(--font-ui);
+      font-size: 0.875rem;
+      cursor: pointer;
+      color: var(--neutral-700);
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .lb-seg button img {
+      width: 16px;
+      height: 16px;
+      display: block;
+      flex-shrink: 0;
+    }
+    .lb-seg button.is-on {
+      background: #fff;
+      color: var(--emerald-900);
+      font-weight: 700;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    .lb-podium-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: stretch;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    .lb-card {
+      position: relative;
+      flex: 1 1 220px;
+      max-width: 320px;
+      padding: 32px;
+      border-radius: 16px;
+      background: var(--zinc-100);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      overflow: hidden;
+    }
+    .lb-card .watermark {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      font-family: var(--font-display);
+      font-size: 4.75rem;
+      line-height: 1;
+      font-weight: 800;
+      color: rgba(6, 78, 59, 0.06);
+      pointer-events: none;
+      letter-spacing: -0.06em;
+    }
+    .lb-card .face {
+      width: 96px;
+      height: 96px;
+      border-radius: 999px;
+      object-fit: cover;
+      box-shadow:
+        0 8px 10px -6px rgba(0, 0, 0, 0.1),
+        0 0 0 4px #fff;
+      position: relative;
+      z-index: 1;
+    }
+    .lb-card .rank-dot {
+      position: absolute;
+      z-index: 2;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      bottom: 8px;
+      right: 8px;
+      outline: 2px solid #fff;
+      outline-offset: -2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: var(--font-ui);
+      color: #fff;
+    }
+    .lb-card .rank-dot.stone {
+      background: #d6d3d1;
+    }
+    .lb-card .rank-dot.amber {
+      background: var(--amber-600);
+    }
+    .lb-card .ph-wrap {
+      position: relative;
+      margin-top: 8px;
+    }
+    .lb-card h3 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #18181b;
+      text-align: center;
+    }
+    .lb-card .coins-big {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--emerald-900);
+    }
+    .lb-card .coins-sub {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(6, 78, 59, 0.6);
+      font-family: var(--font-ui);
+    }
+    .lb-card .micro-bar {
+      width: 100%;
+      padding-top: 8px;
+    }
+    .lb-card .micro-bar .track {
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(6, 78, 59, 0.1);
+      overflow: hidden;
+    }
+    .lb-card .micro-bar .fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--green-300);
+    }
+    .lb-card.is-winner {
+      flex: 1.15 1 280px;
+      max-width: 380px;
+      padding: 40px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, var(--emerald-900), var(--teal-800));
+      box-shadow: 0 25px 50px -12px rgba(15, 82, 56, 0.2);
+    }
+    .lb-card.is-winner .watermark {
+      color: rgba(255, 255, 255, 0.07);
+      font-size: 7rem;
+      top: 18px;
+      right: 18px;
+    }
+    .lb-card.is-winner .face {
+      width: 128px;
+      height: 128px;
+      box-shadow:
+        0 25px 50px -12px rgba(0, 0, 0, 0.25),
+        0 0 0 4px rgba(146, 247, 195, 0.5);
+    }
+    .lb-card.is-winner .crown {
+      position: absolute;
+      left: 50%;
+      top: -36px;
+      transform: translateX(-50%);
+      width: 32px;
+      height: 40px;
+      background: var(--emerald-200);
+      border-radius: 4px;
+    }
+    .lb-card.is-winner .rank-dot {
+      width: 40px;
+      height: 40px;
+      bottom: 4px;
+      right: 4px;
+      background: var(--emerald-200);
+      outline-width: 4px;
+      outline-offset: -4px;
+      outline-color: var(--emerald-900);
+      color: var(--emerald-900);
+      font-size: 1.125rem;
+    }
+    .lb-card.is-winner .lb-rank1-badge {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      z-index: 3;
+      pointer-events: none;
+      filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.18));
+    }
+    .lb-card.is-winner .lb-rank1-badge svg {
+      width: 40px;
+      height: 52px;
+      display: block;
+    }
+    .lb-card.is-winner h3 {
+      color: #fff;
+      font-size: 1.5rem;
+    }
+    .lb-card.is-winner .coins-big {
+      font-size: 2.25rem;
+      color: var(--emerald-200);
+    }
+    .lb-card.is-winner .coins-sub {
+      color: rgba(167, 243, 208, 0.6);
+    }
+    .lb-view-profile {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 32px;
+      border-radius: 12px;
+      border: none;
+      background: #fff;
+      font-family: var(--font-ui);
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--emerald-900);
+      cursor: pointer;
+      box-shadow: 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    }
+
+    .content {
+      padding: var(--space-xl);
+      flex: 1;
+    }
+
+    .panel {
+      display: none;
+      animation: fadeIn 0.25s ease;
+    }
+    .panel.is-visible { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-md);
+      margin-bottom: var(--space-lg);
+    }
+    .page-head h1 {
+      margin: 0;
+      font-family: var(--font-ui);
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .page-head p {
+      margin: 6px 0 0;
+      color: var(--text-muted);
+      max-width: 520px;
+      font-size: 0.9rem;
+    }
+    .page-actions {
+      display: flex;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .btn-ghost {
+      background: var(--bg-card);
+      border-color: var(--border);
+      color: var(--text);
+    }
+    .btn-ghost:hover { background: #f7faf8; }
+    .btn-primary {
+      background: var(--teal-800);
+      color: #fff;
+      border-color: var(--teal-800);
+    }
+    .btn-primary:hover {
+      background: var(--emerald-900);
+      border-color: var(--emerald-900);
+    }
+    .btn svg { width: 16px; height: 16px; }
+
+    /* Stat grid */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-md);
+      margin-bottom: var(--space-lg);
+    }
+    @media (max-width: 1100px) {
+      .stat-grid { grid-template-columns: 1fr; }
+      .app { grid-template-columns: 1fr; }
+      .sidebar {
+        width: 100%;
+        min-height: 0;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: var(--space-md);
+      }
+      .sidebar-brand-block {
+        padding-bottom: 0;
+        flex: 1 1 220px;
+      }
+      .nav-block {
+        flex: 3 1 280px;
+      }
+      .sidebar-footer {
+        width: 100%;
+        border-top: 1px solid var(--zinc-200);
+        padding-top: var(--space-md);
+        margin-top: var(--space-sm);
+      }
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+    .stat-card .stat-icon {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: rgba(244, 244, 245, 0.7);
+      border: 1px solid rgba(228, 228, 231, 0.8);
+    }
+    .stat-card .stat-icon svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
+    .stat-card .delta {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent-up);
+      margin-bottom: var(--space-sm);
+    }
+    .stat-card .delta svg { width: 14px; height: 14px; }
+    .stat-card .label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .stat-card .value {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      line-height: 1.1;
+    }
+    .stat-card .hint {
+      margin-top: var(--space-sm);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: var(--space-md);
+      align-items: start;
+    }
+    @media (max-width: 1000px) {
+      .two-col { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .card-hd {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .card-hd h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: #f0f4f1;
+      padding: 4px;
+      border-radius: var(--radius-sm);
+    }
+    .tabs button {
+      border: none;
+      background: transparent;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .tabs button.is-on {
+      background: #fff;
+      color: var(--verde-dark);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .activity-list { margin: 0; padding: 0; list-style: none; }
+    .activity-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: var(--space-md);
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--border-soft);
+      align-items: center;
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-main .line1 { font-weight: 600; font-size: 0.9rem; }
+    .activity-main .line2 {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .activity-side {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+    .tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--verde-soft);
+      color: var(--verde-dark);
+      white-space: nowrap;
+    }
+    .tag.pending { background: #fff7ed; color: var(--accent-pending); }
+    .tag.impact { background: #eff6ff; color: var(--accent-info); }
+    .coin-pill {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent-warm);
+    }
+    .time-pill {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .sdg-list { padding: var(--space-lg); }
+    .sdg-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-md) 0;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .sdg-row:last-child { border-bottom: none; }
+    .sdg-rank {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--verde);
+      width: 28px;
+    }
+    .sdg-name { font-weight: 600; font-size: 0.9rem; }
+    .sdg-meta { font-size: 0.8rem; color: var(--text-muted); }
+    .sdg-count { font-weight: 700; color: var(--text); }
+
+    .card-foot {
+      padding: var(--space-md) var(--space-lg);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-soft);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+    }
+    .link-muted {
+      color: var(--verde);
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 0.8rem;
+    }
+    .link-muted:hover { text-decoration: underline; }
+
+    /* Table */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .toolbar h2 { margin: 0; font-size: 1rem; font-family: var(--font-display); font-weight: 600; }
+    .toolbar-meta { font-size: 0.85rem; color: var(--text-muted); }
+    .select-like {
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      font-family: inherit;
+      font-size: 0.8rem;
+      background: #fafcfb;
+    }
+    table.data {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    table.data th {
+      text-align: left;
+      padding: 12px var(--space-lg);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      background: #fafcfb;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    table.data td {
+      padding: 14px var(--space-lg);
+      border-bottom: 1px solid var(--border-soft);
+      vertical-align: middle;
+    }
+    .student-cell { display: flex; align-items: center; gap: 12px; }
+    .student-cell .ini {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--verde-soft);
+      color: var(--verde-dark);
+      font-weight: 700;
+      font-size: 0.7rem;
+      letter-spacing: 0.02em;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      border: 1px solid rgba(26, 127, 82, 0.15);
+    }
+    .student-cell .nm { font-weight: 600; }
+    #panel-verifications .student-cell .nm { font-weight: 700; }
+    #panel-verifications #ver-title.title-dash-platform {
+      color: var(--emerald-900);
+    }
+    .student-cell .id { font-size: 0.75rem; color: var(--text-muted); }
+    .btn-sm {
+      padding: 8px 14px;
+      font-size: 0.8rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-sm:hover { border-color: var(--teal-800); color: var(--emerald-900); }
+
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-md);
+      padding: var(--space-lg);
+      background: #fafcfb;
+      border-top: 1px solid var(--border-soft);
+    }
+    @media (max-width: 700px) {
+      .mini-stats { grid-template-columns: 1fr; }
+    }
+    .mini-stat .lbl {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .mini-stat .val { font-family: var(--font-display); font-size: 1.35rem; font-weight: 700; margin-top: 4px; }
+    .mini-stat .sub { font-size: 0.75rem; color: var(--accent-up); margin-top: 4px; font-weight: 600; }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-md) var(--space-lg);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .pagination .nums { display: flex; gap: 6px; }
+    .pagination .nums button {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
+    }
+    .pagination .nums button.is-current {
+      background: var(--teal-800);
+      color: #fff;
+      border-color: var(--teal-800);
+    }
+
+    /* Leaderboard */
+    .hero-lb {
+      text-align: center;
+      padding: var(--space-xl) var(--space-lg);
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .hero-lb h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 600;
+    }
+    .hero-lb p {
+      margin: var(--space-sm) auto 0;
+      max-width: 480px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .podium {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: var(--space-md);
+      padding: var(--space-xl) var(--space-lg) var(--space-lg);
+      background: linear-gradient(180deg, #f6faf7 0%, #fff 100%);
+    }
+    .podium-slot {
+      flex: 1;
+      max-width: 200px;
+      text-align: center;
+    }
+    .podium-slot .rank-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .podium-bar {
+      border-radius: var(--radius-md) var(--radius-md) 0 0;
+      margin: 0 auto 12px;
+      width: 100%;
+      max-width: 140px;
+      background: linear-gradient(180deg, var(--verde-soft), #fff);
+      border: 1px solid var(--border-soft);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: 12px;
+      position: relative;
+    }
+    .podium-slot:nth-child(1) .podium-bar { height: 200px; }
+    .podium-slot:nth-child(2) .podium-bar { height: 240px; border-color: rgba(201, 162, 74, 0.35); background: linear-gradient(180deg, #fdf8e8, #fff); }
+    .podium-slot:nth-child(3) .podium-bar { height: 170px; }
+    .podium-av {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #2ecf8a, #1a7f52);
+      color: #fff;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+    }
+    .podium-slot:nth-child(2) .podium-av {
+      width: 64px;
+      height: 64px;
+      font-size: 1rem;
+      background: linear-gradient(135deg, #c9a24a, #8b6914);
+    }
+    .podium-name { font-weight: 700; font-size: 0.95rem; }
+    .podium-coins { font-size: 0.8rem; color: var(--accent-warm); font-weight: 700; margin-top: 4px; }
+
+    .lb-tabs-wrap {
+      display: flex;
+      justify-content: center;
+      padding: var(--space-md);
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .rank-table-wrap { padding: 0 var(--space-lg) var(--space-lg); }
+    .rank-table-wrap .caption {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      padding: var(--space-md) 0;
+    }
+
+    .impact-bar {
+      height: 8px;
+      border-radius: 999px;
+      background: var(--border-soft);
+      overflow: hidden;
+      width: 100px;
+    }
+    .impact-bar > span {
+      display: block;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--verde), var(--verde-glow));
+    }
+
+    .impact-summary {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-md);
+      padding: var(--space-lg);
+    }
+    .lb-impact-summary {
+      grid-template-columns: 1fr 1fr minmax(260px, 2fr);
+      padding: 0;
+    }
+    @media (max-width: 700px) {
+      .impact-summary { grid-template-columns: 1fr; }
+      .lb-impact-summary { grid-template-columns: 1fr; }
+    }
+    .impact-tile {
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      background: #fafcfb;
+    }
+    .impact-tile .lbl { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+    .impact-tile .big { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; margin-top: 6px; }
+    .impact-tile .sub { font-size: 0.8rem; color: var(--accent-up); font-weight: 600; margin-top: 4px; }
+
+    /* Export */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-md);
+      margin-bottom: var(--space-lg);
+    }
+    @media (max-width: 1000px) {
+      .metric-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 500px) {
+      .metric-grid { grid-template-columns: 1fr; }
+    }
+    .metric-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-soft);
+      padding: var(--space-lg);
+      box-shadow: var(--shadow-sm);
+    }
+    .metric-card .lbl {
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1rem;
+      color: var(--neutral-700);
+    }
+    .metric-card .val-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .metric-card .num {
+      font-family: var(--font-display);
+      font-size: 1.875rem;
+      font-weight: 700;
+      line-height: 2.25rem;
+      letter-spacing: -0.02em;
+      color: var(--emerald-900);
+    }
+    .metric-card .unit { font-size: 0.9rem; color: var(--text-muted); font-weight: 600; }
+    .metric-card .chg {
+      margin-top: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--emerald-200);
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1rem;
+      color: #047857;
+    }
+    .metric-card .chg img {
+      width: 10px;
+      height: 12px;
+      display: block;
+      flex-shrink: 0;
+    }
+
+    .export-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: var(--space-md);
+    }
+    @media (max-width: 900px) {
+      .export-grid { grid-template-columns: 1fr; }
+    }
+    .export-card {
+      padding: var(--space-lg);
+    }
+    .export-card h3 {
+      margin: 0 0 var(--space-sm);
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+    .export-card > p {
+      margin: 0 0 var(--space-md);
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      line-height: 1.55;
+    }
+    .file-list { list-style: none; margin: 0; padding: 0; }
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-soft);
+      font-size: 0.875rem;
+    }
+    .file-item:last-child { border-bottom: none; }
+    .file-item strong { font-weight: 600; }
+    .file-item span { font-size: 0.75rem; color: var(--text-muted); }
+
+    .quote {
+      margin: var(--space-md) 0 var(--space-lg);
+      padding: var(--space-md);
+      border-left: 3px solid var(--verde);
+      background: var(--verde-soft);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 0.85rem;
+      color: var(--text);
+      font-style: italic;
+    }
+
+    .gm-card {
+      padding: var(--space-lg);
+    }
+    .gm-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+    }
+    .gm-pct {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--verde);
+    }
+    .gm-ring {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      background: conic-gradient(var(--verde) 0 295deg, var(--border-soft) 295deg 360deg);
+      display: grid;
+      place-items: center;
+    }
+    .gm-ring-inner {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 0.9rem;
+      color: var(--verde-dark);
+    }
+    .gm-copy {
+      flex: 1;
+      min-width: 200px;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .btn-export-report {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 16px 40px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(180deg, var(--emerald-900), var(--teal-800));
+      color: #fff;
+      font-family: var(--font-ui);
+      font-size: 1.125rem;
+      font-weight: 700;
+      line-height: 1.75rem;
+      cursor: pointer;
+      box-shadow: 0 12px 32px -4px rgba(25, 28, 28, 0.06);
+    }
+    .btn-export-report:hover {
+      filter: brightness(1.05);
+    }
+    .gm-card-v2 {
+      border-radius: 16px;
+      padding: 32px;
+      background: var(--teal-800);
+      overflow: hidden;
+      position: relative;
+    }
+    .gm-card-v2-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .gm-v2-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      line-height: 1.75rem;
+      color: var(--emerald-200);
+    }
+    .gm-v2-pct-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+    }
+    .gm-v2-big {
+      font-family: var(--font-ui);
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 48px;
+      color: #fff;
+    }
+    .gm-v2-sub {
+      font-family: var(--font-ui);
+      font-size: 1rem;
+      font-weight: 400;
+      line-height: 1.5rem;
+      color: rgba(255, 255, 255, 0.6);
+      padding-bottom: 4px;
+    }
+    .gm-v2-copy {
+      margin: 0;
+      padding-top: 8px;
+      padding-bottom: 16px;
+      font-family: var(--font-ui);
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.8);
+    }
+    .gm-v2-cta {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      background: var(--emerald-200);
+      font-family: var(--font-ui);
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.5rem;
+      color: var(--green-950);
+      cursor: pointer;
+    }
+    .gm-v2-cta:hover {
+      filter: brightness(0.98);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Primary">
+      <div class="sidebar-brand-block">
+        <div class="brand-row">
+          <div class="brand-logo" aria-hidden="true">
+            <img class="brand-logo-leaf" src="assets/brand-leaf.svg" width="15" height="15" alt="" />
+          </div>
+          <div class="brand-text-col">
+            <p class="brand-title">Verde Admin</p>
+            <p class="brand-sub">Digital Sustainability Hub</p>
+          </div>
+        </div>
+      </div>
+      <nav class="nav-block" aria-label="Main navigation">
+        <ul class="nav-list">
+          <li class="nav-item is-active" data-nav="dashboard">
+            <button type="button">
+              <span class="nav-icon" aria-hidden="true">
+                <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 16H6V8H2V16ZM8 16H12V2H8V16ZM14 16H18V10H14V16ZM0 18V6H6V0H14V8H20V18H0Z" fill="currentColor"/></svg>
+              </span>
+              <span class="nav-label">Dashboard</span>
+            </button>
+          </li>
+          <li class="nav-item" data-nav="verifications">
+            <button type="button">
+              <span class="nav-icon" aria-hidden="true">
+                <svg width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.95 13.55L12.6 7.9L11.175 6.475L6.95 10.7L4.85 8.6L3.425 10.025L6.95 13.55ZM8 20C5.68333 19.4167 3.77083 18.0875 2.2625 16.0125C0.754167 13.9375 0 11.6333 0 9.1V3L8 0L16 3V9.1C16 11.6333 15.2458 13.9375 13.7375 16.0125C12.2292 18.0875 10.3167 19.4167 8 20ZM8 17.9C9.73333 17.35 11.1667 16.25 12.3 14.6C13.4333 12.95 14 11.1167 14 9.1V4.375L8 2.125L2 4.375V9.1C2 11.1167 2.56667 12.95 3.7 14.6C4.83333 16.25 6.26667 17.35 8 17.9Z" fill="currentColor"/></svg>
+              </span>
+              <span class="nav-label">Verifications</span>
+            </button>
+          </li>
+          <li class="nav-item" data-nav="leaderboard">
+            <button type="button">
+              <span class="nav-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.5 9.33333L5.83333 7.55417L8.16667 9.33333L7.29167 6.44583L9.625 4.78333H6.76667L5.83333 1.75L4.9 4.78333H2.04167L4.375 6.44583L3.5 9.33333ZM5.83333 11.6667C5.02639 11.6667 4.26806 11.5135 3.55833 11.2073C2.84861 10.901 2.23125 10.4854 1.70625 9.96042C1.18125 9.43542 0.765625 8.81806 0.459375 8.10833C0.153125 7.39861 0 6.64028 0 5.83333C0 5.02639 0.153125 4.26806 0.459375 3.55833C0.765625 2.84861 1.18125 2.23125 1.70625 1.70625C2.23125 1.18125 2.84861 0.765625 3.55833 0.459375C4.26806 0.153125 5.02639 0 5.83333 0C6.64028 0 7.39861 0.153125 8.10833 0.459375C8.81806 0.765625 9.43542 1.18125 9.96042 1.70625C10.4854 2.23125 10.901 2.84861 11.2073 3.55833C11.5135 4.26806 11.6667 5.02639 11.6667 5.83333C11.6667 6.64028 11.5135 7.39861 11.2073 8.10833C10.901 8.81806 10.4854 9.43542 9.96042 9.96042C9.43542 10.4854 8.81806 10.901 8.10833 11.2073C7.39861 11.5135 6.64028 11.6667 5.83333 11.6667ZM5.83333 10.5C7.13611 10.5 8.23958 10.0479 9.14375 9.14375C10.0479 8.23958 10.5 7.13611 10.5 5.83333C10.5 4.53056 10.0479 3.42708 9.14375 2.52292C8.23958 1.61875 7.13611 1.16667 5.83333 1.16667C4.53056 1.16667 3.42708 1.61875 2.52292 2.52292C1.61875 3.42708 1.16667 4.53056 1.16667 5.83333C1.16667 7.13611 1.61875 8.23958 2.52292 9.14375C3.42708 10.0479 4.53056 10.5 5.83333 10.5Z" fill="currentColor"/></svg>
+              </span>
+              <span class="nav-label">Leaderboard</span>
+            </button>
+          </li>
+          <li class="nav-item" data-nav="export">
+            <button type="button">
+              <span class="nav-icon" aria-hidden="true">
+                <svg width="16" height="21" viewBox="0 0 16 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 21C1.45 21 0.979167 20.8042 0.5875 20.4125C0.195833 20.0208 0 19.55 0 19V9C0 8.45 0.195833 7.97917 0.5875 7.5875C0.979167 7.19583 1.45 7 2 7H5V9H2V19H14V9H11V7H14C14.55 7 15.0208 7.19583 15.4125 7.5875C15.8042 7.97917 16 8.45 16 9V19C16 19.55 15.8042 20.0208 15.4125 20.4125C15.0208 20.8042 14.55 21 14 21H2ZM7 15V3.825L5.4 5.425L4 4L8 0L12 4L10.6 5.425L9 3.825V15H7Z" fill="currentColor"/></svg>
+              </span>
+              <span class="nav-label">Export</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <img class="avatar-ring" src="assets/avatar-header.png" width="44" height="44" alt="" style="width:44px;height:44px;" />
+        <div class="avatar-meta">
+          <div class="name">Admin Avatar</div>
+          <div class="role">Platform Lead</div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <label class="search-chrome" for="global-search">
+          <span class="search-ic" aria-hidden="true">
+            <img src="assets/ui-icons/search.svg" width="18" height="18" alt="" />
+          </span>
+          <input id="global-search" type="search" placeholder="Search initiatives, students, or SDG impact..." autocomplete="off" />
+        </label>
+        <div class="topbar-actions">
+          <button type="button" class="icon-btn" aria-label="Notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </button>
+          <button type="button" class="icon-btn" aria-label="Settings">
+            <img src="assets/ui-icons/header-settings.svg" width="20" height="20" alt="" />
+          </button>
+          <div class="topbar-divider" aria-hidden="true"></div>
+          <div class="topbar-user">
+            <div class="topbar-user-meta">
+              <div class="nm">Admin Avatar</div>
+              <div class="role">Platform Lead</div>
+            </div>
+            <img class="avatar-ring" src="assets/avatar-header.png" width="40" height="40" alt="" />
+          </div>
+        </div>
+      </header>
+
+      <main class="content">
+        <!-- Dashboard -->
+        <section class="panel is-visible" id="panel-dashboard" aria-labelledby="dash-title">
+          <div class="page-head-dash">
+            <div>
+              <h1 id="dash-title" class="title-dash-platform">Platform Overview</h1>
+              <p class="sub">Monitor live sustainability actions and student engagement across the campus.</p>
+            </div>
+            <button type="button" class="btn-new-bounty">
+              <img src="assets/icon-plus.svg" width="20" height="20" alt="" />
+              NEW BOUNTY
+            </button>
+          </div>
+
+          <div class="stat-grid">
+            <article class="stat-card">
+              <div class="stat-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M10 20C8.61667 20 7.31667 19.7375 6.1 19.2125C4.88333 18.6875 3.825 17.975 2.925 17.075C2.025 16.175 1.3125 15.1167 0.7875 13.9C0.2625 12.6833 0 11.3833 0 10C0 8.61667 0.2625 7.31667 0.7875 6.1C1.3125 4.88333 2.025 3.825 2.925 2.925C3.825 2.025 4.88333 1.3125 6.1 0.7875C7.31667 0.2625 8.61667 0 10 0C11.0833 0 12.1083 0.158333 13.075 0.475C14.0417 0.791667 14.9333 1.23333 15.75 1.8L14.3 3.275C13.6667 2.875 12.9917 2.5625 12.275 2.3375C11.5583 2.1125 10.8 2 10 2C7.78333 2 5.89583 2.77917 4.3375 4.3375C2.77917 5.89583 2 7.78333 2 10C2 12.2167 2.77917 14.1042 4.3375 15.6625C5.89583 17.2208 7.78333 18 10 18C12.2167 18 14.1042 17.2208 15.6625 15.6625C17.2208 14.1042 18 12.2167 18 10C18 9.7 17.9833 9.4 17.95 9.1C17.9167 8.8 17.8667 8.50833 17.8 8.225L19.425 6.6C19.6083 7.13333 19.75 7.68333 19.85 8.25C19.95 8.81667 20 9.4 20 10C20 11.3833 19.7375 12.6833 19.2125 13.9C18.6875 15.1167 17.975 16.175 17.075 17.075C16.175 17.975 15.1167 18.6875 13.9 19.2125C12.6833 19.7375 11.3833 20 10 20ZM8.6 14.6L4.35 10.35L5.75 8.95L8.6 11.8L18.6 1.775L20 3.175L8.6 14.6Z" fill="#0F5238"/>
+                </svg>
+              </div>
+              <div class="delta">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
+                +12%
+              </div>
+              <div class="label">Verified actions today</div>
+              <div class="value">1,284</div>
+              <div class="hint">Highest activity in &ldquo;Reforestation&rdquo; segment</div>
+            </article>
+            <article class="stat-card">
+              <div class="stat-icon" aria-hidden="true">
+                <svg width="18" height="20" viewBox="0 0 18 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6.1 7.25L1.05 4.425L9 0L16.95 4.425L11.9 7.25C11.5167 6.85 11.075 6.54167 10.575 6.325C10.075 6.10833 9.55 6 9 6C8.45 6 7.925 6.10833 7.425 6.325C6.925 6.54167 6.48333 6.85 6.1 7.25ZM8 19.45L0 15V6.125L5.125 9C5.075 9.16667 5.04167 9.32917 5.025 9.4875C5.00833 9.64583 5 9.81667 5 10C5 10.9167 5.275 11.7333 5.825 12.45C6.375 13.1667 7.1 13.6417 8 13.875V19.45ZM9 12C8.45 12 7.97917 11.8042 7.5875 11.4125C7.19583 11.0208 7 10.55 7 10C7 9.45 7.19583 8.97917 7.5875 8.5875C7.97917 8.19583 8.45 8 9 8C9.55 8 10.0208 8.19583 10.4125 8.5875C10.8042 8.97917 11 9.45 11 10C11 10.55 10.8042 11.0208 10.4125 11.4125C10.0208 11.8042 9.55 12 9 12ZM10 19.45V13.875C10.9 13.6417 11.625 13.1667 12.175 12.45C12.725 11.7333 13 10.9167 13 10C13 9.81667 12.9917 9.64583 12.975 9.4875C12.9583 9.32917 12.925 9.16667 12.875 9L18 6.125V15L10 19.45Z" fill="#384C43"/>
+                </svg>
+              </div>
+              <div class="delta">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
+                +5.4%
+              </div>
+              <div class="label">Total coins awarded today</div>
+              <div class="value">42,900</div>
+              <div class="hint">Equivalent to ~14.2 tons of CO<sub>2</sub> offset</div>
+            </article>
+            <article class="stat-card">
+              <div class="stat-icon" aria-hidden="true">
+                <svg width="22" height="16" viewBox="0 0 22 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M0 16V13.2C0 12.6333 0.145833 12.1125 0.4375 11.6375C0.729167 11.1625 1.11667 10.8 1.6 10.55C2.63333 10.0333 3.68333 9.64583 4.75 9.3875C5.81667 9.12917 6.9 9 8 9C9.1 9 10.1833 9.12917 11.25 9.3875C12.3167 9.64583 13.3667 10.0333 14.4 10.55C14.8833 10.8 15.2708 11.1625 15.5625 11.6375C15.8542 12.1125 16 12.6333 16 13.2V16H0ZM18 16V13C18 12.2667 17.7958 11.5625 17.3875 10.8875C16.9792 10.2125 16.4 9.63333 15.65 9.15C16.5 9.25 17.3 9.42083 18.05 9.6625C18.8 9.90417 19.5 10.2 20.15 10.55C20.75 10.8833 21.2083 11.2542 21.525 11.6625C21.8417 12.0708 22 12.5167 22 13V16H18ZM8 8C6.9 8 5.95833 7.60833 5.175 6.825C4.39167 6.04167 4 5.1 4 4C4 2.9 4.39167 1.95833 5.175 1.175C5.95833 0.391667 6.9 0 8 0C9.1 0 10.0417 0.391667 10.825 1.175C11.6083 1.95833 12 2.9 12 4C12 5.1 11.6083 6.04167 10.825 6.825C10.0417 7.60833 9.1 8 8 8ZM18 4C18 5.1 17.6083 6.04167 16.825 6.825C16.0417 7.60833 15.1 8 14 8C13.8167 8 13.5833 7.97917 13.3 7.9375C13.0167 7.89583 12.7833 7.85 12.6 7.8C13.05 7.26667 13.3958 6.675 13.6375 6.025C13.8792 5.375 14 4.7 14 4C14 3.3 13.8792 2.625 13.6375 1.975C13.3958 1.325 13.05 0.733333 12.6 0.2C12.8333 0.116667 13.0667 0.0625 13.3 0.0375C13.5333 0.0125 13.7667 0 14 0C15.1 0 16.0417 0.391667 16.825 1.175C17.6083 1.95833 18 2.9 18 4Z" fill="#006C48"/>
+                </svg>
+              </div>
+              <div class="delta">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
+                +28%
+              </div>
+              <div class="label">Active students today</div>
+              <div class="value">8,412</div>
+              <div class="hint">Peak active hours: 10:00 AM &ndash; 2:00 PM</div>
+            </article>
+          </div>
+
+          <div class="two-col">
+            <div class="dash-feed-shell">
+              <div class="dash-feed-inner">
+                <div class="dash-feed-hd">
+                  <div class="dash-feed-title">
+                    <img src="assets/Icon-12.svg" width="20" height="20" alt="" />
+                    <h2>Real-time Live Activity</h2>
+                  </div>
+                  <div class="pill-tabs" role="tablist" aria-label="Activity scope">
+                <button type="button" class="is-on"><img src="assets/ui-icons/dash-bars.svg" alt="" />All</button>
+                <button type="button"><img src="assets/ui-icons/dash-drop.svg" alt="" />Bounties</button>
+                <button type="button"><img src="assets/ui-icons/dash-arrows.svg" alt="" />Impact</button>
+                  </div>
+                </div>
+                <div class="feed-rows">
+                  <div class="feed-row">
+                    <div class="feed-avatar-wrap">
+                      <img src="assets/Iconnn.png" width="48" height="48" alt="" />
+                    </div>
+                    <div class="feed-body">
+                      <div class="feed-line1">
+                        <p class="msg"><strong>Alex Rivera</strong> verified a tree planting in <strong>Sector 7</strong></p>
+                        <span class="feed-time">2m ago</span>
+                      </div>
+                      <div class="feed-line2">
+                        <div class="feed-coins"><img src="assets/Icon-25.svg" width="15" height="15" alt="" /> +250 Coins</div>
+                        <span class="feed-tag">SDG 13: Life on Land</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="feed-row">
+                    <div class="feed-avatar-wrap">
+                      <img src="assets/Iconnnn.png" width="48" height="48" alt="" />
+                    </div>
+                    <div class="feed-body">
+                      <div class="feed-line1">
+                        <p class="msg"><strong>Jordan Smith</strong> submitted proof for <strong>Water Conservation Bounty</strong></p>
+                        <span class="feed-time">5m ago</span>
+                      </div>
+                      <div class="feed-line2">
+                        <div class="feed-coins"><img src="assets/Icon-26.svg" width="15" height="15" alt="" /> Verification Pending</div>
+                        <span class="feed-tag">SDG 11: Clean Water</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="feed-row">
+                    <div class="feed-avatar-wrap">
+                      <img src="assets/Iconnnnn.png" width="48" height="48" alt="" />
+                    </div>
+                    <div class="feed-body">
+                      <div class="feed-line1">
+                        <p class="msg"><strong>Marcus Chen</strong> donated <strong>1,200 Coins</strong> to <strong>Amazon Sanctuary</strong></p>
+                        <span class="feed-time">12m ago</span>
+                      </div>
+                      <div class="feed-line2">
+                        <div class="feed-coins red"><img src="assets/Icon-27.svg" width="15" height="15" alt="" /> Community Impact</div>
+                        <span class="feed-tag">Direct Donation</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="feed-row">
+                    <div class="feed-avatar-wrap">
+                      <img src="assets/Iconnnnnn.png" width="48" height="48" alt="" />
+                    </div>
+                    <div class="feed-body">
+                      <div class="feed-line1">
+                        <p class="msg"><strong>Sophie Lane</strong> completed the <strong>Renewable Energy Quiz</strong></p>
+                        <span class="feed-time">22m ago</span>
+                      </div>
+                      <div class="feed-line2">
+                        <div class="feed-coins"><img src="assets/Icon-25.svg" width="15" height="15" alt="" /> +50 Coins</div>
+                        <span class="feed-tag">SDG 11: Clean Energy</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <button type="button" class="feed-log-btn">View historical activity log</button>
+              </div>
+            </div>
+
+            <div class="sdg-card-v2">
+              <div class="sdg-card-v2-hd">
+                <span>Top contributing SDGs</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#404040" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+              <div class="sdg-bar-block">
+                <div class="sdg-bar-labels">
+                  <div class="name">1. SDG 12: Responsible<br />Consumption</div>
+                  <div class="ct">842<br />actions</div>
+                </div>
+                <div class="sdg-track"><span style="width:85%;background:#064e3b;"></span></div>
+              </div>
+              <div class="sdg-bar-block">
+                <div class="sdg-bar-labels">
+                  <div class="name">2. SDG 11: Sustainable Cities</div>
+                  <div class="ct">612 actions</div>
+                </div>
+                <div class="sdg-track"><span style="width:65%;background:#115e59;"></span></div>
+              </div>
+              <div class="sdg-bar-block">
+                <div class="sdg-bar-labels">
+                  <div class="name">3. SDG 13: Climate Action</div>
+                  <div class="ct">528 actions</div>
+                </div>
+                <div class="sdg-track"><span style="width:55%;background:#065f46;"></span></div>
+              </div>
+              <div class="sdg-card-v2-ft">Data refreshed every 5 minutes</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Verifications -->
+        <section class="panel" id="panel-verifications" hidden aria-labelledby="ver-title">
+          <h1 id="ver-title" class="title-dash-platform" style="margin-bottom:12px;">Verification Queue</h1>
+          <p class="sub" style="margin-bottom:28px;max-width:735px;">Every manual approval ensures that campus sustainability efforts remain transparent and impactful.</p>
+          <div class="card" style="border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,0.05);overflow:hidden;">
+            <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;padding:32px;background:rgba(255,255,255,0.5);">
+              <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+                <span style="font-family:var(--font-display);font-size:1.25rem;font-weight:700;color:#18181b;">Pending Verification</span>
+                <span style="font-family:var(--font-display);font-size:1rem;font-weight:400;color:var(--neutral-700);">(48 Total)</span>
+              </div>
+              <div style="display:flex;gap:12px;">
+                <button type="button" style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:8px;border:none;background:var(--zinc-100);font-family:var(--font-ui);font-size:0.875rem;font-weight:600;color:#18181b;cursor:pointer;">
+                  <img src="assets/ui-icons/ver-flag.svg" width="12" height="12" alt="" />
+                  Filter
+                </button>
+                <button type="button" style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:8px;border:none;background:var(--zinc-100);font-family:var(--font-ui);font-size:0.875rem;font-weight:600;color:#18181b;cursor:pointer;">
+                  <img src="assets/ui-icons/ver-refresh.svg" width="12" height="12" alt="" />
+                  Newest First
+                </button>
+              </div>
+            </div>
+            <div style="background:rgba(229,229,229,0.5);display:grid;grid-template-columns:44% 40% 16%;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--neutral-700);">
+              <div style="padding:24px 32px;">Student details</div>
+              <div style="padding:24px 32px;">Bounty initiative</div>
+              <div style="padding:24px 32px;text-align:right;">Actions</div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="data" style="border-collapse:collapse;table-layout:fixed;">
+                <colgroup>
+                  <col style="width:44%;" />
+                  <col style="width:40%;" />
+                  <col style="width:16%;" />
+                </colgroup>
+                <tbody>
+                  <tr style="border-top:1px solid rgba(229,229,229,0.3);">
+                    <td style="padding:24px 32px;"><div class="student-cell"><span class="ini" aria-hidden="true">AM</span><div><div class="nm">Alex Mercer</div><div class="id">ID: #VRD-49210</div></div></div></td>
+                    <td style="padding:24px 32px;"><div style="display:flex;align-items:center;gap:8px;"><img src="assets/Icon-20.svg" width="12" height="12" alt="" /><span style="font-family:var(--font-ui);font-size:0.875rem;font-weight:500;">Urban Composting 101</span></div></td>
+<td style="padding:24px 32px;text-align:right;">
+  <button type="button" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:12px;border:none;background:linear-gradient(180deg,var(--emerald-900),var(--teal-800));color:#fff;font-family:var(--font-ui);font-size:0.875rem;font-weight:700;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+    Review Proof 
+    <img src="assets/Icon-28.svg" width="12" height="12" alt="" style="filter:brightness(0) invert(1);" />
+  </button>
+</td>                  </tr>
+                  <tr style="background:rgba(244,244,245,0.2);border-top:1px solid rgba(229,229,229,0.3);">
+                    <td style="padding:24px 32px;"><div class="student-cell"><img src="assets/avatar-sarah.png" width="40" height="40" alt="" style="border-radius:999px;object-fit:cover;" /><div><div class="nm">Sarah Chen</div><div class="id">ID: #VRD-82739</div></div></div></td>
+                    <td style="padding:24px 32px;"><div style="display:flex;align-items:center;gap:8px;"><img src="assets/Icon-21.svg" width="20" height="20" alt="" /><span style="font-family:var(--font-ui);font-size:0.875rem;font-weight:500;">Campus Energy Audit</span></div></td>
+<td style="padding:24px 32px;text-align:right;">
+  <button type="button" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:12px;border:none;background:linear-gradient(180deg,var(--emerald-900),var(--teal-800));color:#fff;font-family:var(--font-ui);font-size:0.875rem;font-weight:700;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+    Review Proof 
+    <img src="assets/Icon-28.svg" width="12" height="12" alt="" style="filter:brightness(0) invert(1);" />
+  </button>
+</td>                  </tr>
+                  <tr style="border-top:1px solid rgba(229,229,229,0.3);">
+                    <td style="padding:24px 32px;"><div class="student-cell"><span class="ini" aria-hidden="true">JL</span><div><div class="nm">Jordan Lee</div><div class="id">ID: #VRD-10223</div></div></div></td>
+                    <td style="padding:24px 32px;"><div style="display:flex;align-items:center;gap:8px;"><img src="assets/Icon-22.svg" width="20" height="20" alt="" /><span style="font-family:var(--font-ui);font-size:0.875rem;font-weight:500;">Rainwater Collection Setup</span></div></td>
+<td style="padding:24px 32px;text-align:right;">
+  <button type="button" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:12px;border:none;background:linear-gradient(180deg,var(--emerald-900),var(--teal-800));color:#fff;font-family:var(--font-ui);font-size:0.875rem;font-weight:700;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+    Review Proof 
+    <img src="assets/Icon-28.svg" width="12" height="12" alt="" style="filter:brightness(0) invert(1);" />
+  </button>
+</td>                  </tr>
+                  <tr style="background:rgba(244,244,245,0.2);border-top:1px solid rgba(229,229,229,0.3);">
+                    <td style="padding:24px 32px;"><div class="student-cell"><img src="assets/avatar-marcus.png" width="40" height="40" alt="" style="border-radius:999px;object-fit:cover;" /><div><div class="nm">Marcus Thorne</div><div class="id">ID: #VRD-77341</div></div></div></td>
+                    <td style="padding:24px 32px;"><div style="display:flex;align-items:center;gap:8px;"><img src="assets/Icon-23.svg" width="20" height="20" alt="" /><span style="font-family:var(--font-ui);font-size:0.875rem;font-weight:500;">E-Waste Disposal Program</span></div></td>
+<td style="padding:24px 32px;text-align:right;">
+  <button type="button" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:12px;border:none;background:linear-gradient(180deg,var(--emerald-900),var(--teal-800));color:#fff;font-family:var(--font-ui);font-size:0.875rem;font-weight:700;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+    Review Proof 
+    <img src="assets/Icon-28.svg" width="12" height="12" alt="" style="filter:brightness(0) invert(1);" />
+  </button>
+</td>                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;padding:32px;background:rgba(255,255,255,0.3);border-top:1px solid rgba(229,229,229,0.3);">
+              <span style="font-family:var(--font-ui);font-size:0.875rem;color:var(--neutral-700);">Showing 4 of 48 entries</span>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <button type="button" style="width:40px;height:40px;border-radius:8px;border:1px solid rgba(212,212,216,0.3);background:#fff;">&lsaquo;</button>
+                <button type="button" style="width:40px;height:40px;border-radius:8px;border:none;background:var(--emerald-900);color:#fff;font-weight:700;">1</button>
+                <button type="button" style="width:40px;height:40px;border-radius:8px;border:1px solid rgba(212,212,216,0.3);background:#fff;">2</button>
+                <button type="button" style="width:40px;height:40px;border-radius:8px;border:1px solid rgba(212,212,216,0.3);background:#fff;">3</button>
+                <button type="button" style="width:40px;height:40px;border-radius:8px;border:1px solid rgba(212,212,216,0.3);background:#fff;">&rsaquo;</button>
+              </div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px;">
+            <div class="card" style="padding:32px;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--neutral-700);">Avg. confidence</span><img src="assets/Icon-13.svg" width="20" height="20" alt="" /></div>
+              <div style="font-family:var(--font-display);font-size:2.25rem;font-weight:700;color:var(--emerald-900);">94.2%</div>
+              <div style="margin-top:8px;display:flex;align-items:center;gap:8px;"><span style="padding:2px 8px;background:rgba(167,243,208,0.3);border-radius:4px;font-size:12px;font-weight:700;color:#047857;">+2.4%</span><span style="font-size:12px;color:var(--neutral-700);">from last 24h</span></div>
+            </div>
+            <div class="card" style="padding:32px;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--neutral-700);">Flagged today</span><span style="padding:8px;background:#fecdd3;border-radius:8px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;"><span style="width:2px;height:10px;background:var(--red-700);border-radius:1px;"></span></span></div>
+              <div style="font-family:var(--font-display);font-size:2.25rem;font-weight:700;color:#18181b;">12</div>
+              <div style="margin-top:8px;"><span style="padding:2px 8px;background:#fecdd3;border-radius:4px;font-size:12px;font-weight:700;color:var(--red-700);">Action Required</span></div>
+            </div>
+            <div class="card" style="padding:32px;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--neutral-700);">System health</span><img src="assets/Icon-15.svg" width="20" height="20" alt="" /></div>
+              <div style="font-family:var(--font-display);font-size:2.25rem;font-weight:700;color:var(--teal-800);">Optimal</div>
+              <div style="margin-top:8px;display:flex;align-items:center;gap:8px;"><span style="width:8px;height:8px;background:#065f46;border-radius:99px;"></span><span style="font-size:12px;color:var(--neutral-700);">All sensors active</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Leaderboard -->
+        <section class="panel" id="panel-leaderboard" hidden aria-labelledby="lb-title">
+          <div class="lb-head-row">
+            <div>
+              <h1 id="lb-title">Eco-Leaderboard</h1>
+              <div class="deck">Celebrating our top sustainability champions across the global community.<br />Every action contributes to a greener planet.</div>
+            </div>
+            <div class="lb-seg" role="tablist" aria-label="Leaderboard period">
+              <button type="button" class="is-on"><img src="assets/ui-icons/lb-grid.svg" alt="" />Weekly</button>
+              <button type="button"><img src="assets/ui-icons/lb-shield.svg" alt="" />Monthly</button>
+              <button type="button"><img src="assets/ui-icons/lb-grid.svg" alt="" />All-time</button>
+            </div>
+          </div>
+
+          <div class="lb-podium-row">
+            <article class="lb-card">
+              <div class="watermark" aria-hidden="true">02</div>
+              <div class="ph-wrap">
+                <img class="face" src="assets/avatar-aria.png" width="96" height="96" alt="" />
+                <div class="rank-dot stone">2</div>
+              </div>
+              <h3>Elena Rodriguez</h3>
+              <div style="text-align:center;">
+                <div class="coins-big">4,820</div>
+                <div class="coins-sub">Verde coins</div>
+              </div>
+              <div class="micro-bar"><div class="track"><div class="fill" style="width:75%;"></div></div></div>
+            </article>
+
+            <article class="lb-card is-winner">
+              <div class="watermark" aria-hidden="true">01</div>
+              <div class="lb-rank1-badge" aria-hidden="true">
+                <svg width="32" height="42" viewBox="0 0 32 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11.35 23.4L13.1 17.7L8.5 14H14.2L16 8.4L17.8 14H23.5L18.85 17.7L20.6 23.4L16 19.85L11.35 23.4ZM4 42V26.55C2.73333 25.15 1.75 23.55 1.05 21.75C0.35 19.95 0 18.0333 0 16C0 11.5333 1.55 7.75 4.65 4.65C7.75 1.55 11.5333 0 16 0C20.4667 0 24.25 1.55 27.35 4.65C30.45 7.75 32 11.5333 32 16C32 18.0333 31.65 19.95 30.95 21.75C30.25 23.55 29.2667 25.15 28 26.55V42L16 38L4 42ZM16 28C19.3333 28 22.1667 26.8333 24.5 24.5C26.8333 22.1667 28 19.3333 28 16C28 12.6667 26.8333 9.83333 24.5 7.5C22.1667 5.16667 19.3333 4 16 4C12.6667 4 9.83333 5.16667 7.5 7.5C5.16667 9.83333 4 12.6667 4 16C4 19.3333 5.16667 22.1667 7.5 24.5C9.83333 26.8333 12.6667 28 16 28Z" fill="#92F7C3"/>
+                </svg>
+              </div>
+              <div class="ph-wrap">
+                <img class="face" src="assets/top1.jpg" width="128" height="128" alt="" />
+                <div class="rank-dot">1</div>
+              </div>
+              <h3>Sam Ordiales</h3>
+              <div style="text-align:center;">
+                <div class="coins-big">5,910</div>
+                <div class="coins-sub">Verde coins</div>
+              </div>
+              <button type="button" class="lb-view-profile">                View Profile
+              </button>
+            </article>
+
+            <article class="lb-card">
+              <div class="watermark" aria-hidden="true">03</div>
+              <div class="ph-wrap">
+                <img class="face" src="assets/avatar-sarah.png" width="96" height="96" alt="" />
+                <div class="rank-dot amber">3</div>
+              </div>
+              <h3>Sarah Chen</h3>
+              <div style="text-align:center;">
+                <div class="coins-big">4,150</div>
+                <div class="coins-sub">Verde coins</div>
+              </div>
+              <div class="micro-bar"><div class="track"><div class="fill" style="width:55%;"></div></div></div>
+            </article>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
+            <h2 style="margin:0;font-family:var(--font-display);font-size:1.25rem;font-weight:700;color:#18181b;">Campus Ranking</h2>
+            <span style="font-family:var(--font-ui);font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--neutral-700);">Showing top 100 students</span>
+          </div>
+          <div class="card" style="overflow:hidden;border-radius:16px;">
+            <div style="background:#fafaf9;padding:12px 24px;display:grid;grid-template-columns:96px 1fr 140px 120px 100px;gap:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--neutral-700);">
+              <div>Rank</div>
+              <div>Contributor</div>
+              <div>Total actions</div>
+              <div>Verde coins</div>
+              <div>Progress</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;padding:8px 0;">
+              <div style="display:grid;grid-template-columns:96px 1fr 140px 120px 100px;gap:8px;align-items:center;background:#fff;padding:12px 24px;border-radius:12px;">
+                <div style="font-family:var(--font-display);font-size:1rem;font-weight:700;">#4</div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <img src="assets/avatar-david.png" width="40" height="40" alt="" style="border-radius:8px;object-fit:cover;" />
+                  <span style="font-family:var(--font-ui);font-weight:700;font-size:0.875rem;">David Wilson</span>
+                </div>
+                <div style="font-family:var(--font-ui);font-size:0.875rem;">124 Actions</div>
+                <div style="font-family:var(--font-display);font-weight:700;color:var(--emerald-900);">3,890</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="flex:1;height:6px;background:var(--gray-200);border-radius:99px;overflow:hidden;"><div style="width:50%;height:100%;background:#065f46;"></div></div>
+                  <span style="font-size:10px;font-weight:700;color:var(--neutral-700);">85%</span>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:96px 1fr 140px 120px 100px;gap:8px;align-items:center;background:var(--zinc-100);padding:12px 24px;border-radius:12px;">
+                <div style="font-family:var(--font-display);font-size:1rem;font-weight:700;">#5</div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <img src="assets/avatar-marcus.png" width="40" height="40" alt="" style="border-radius:8px;object-fit:cover;" />
+                  <span style="font-family:var(--font-ui);font-weight:700;font-size:0.875rem;">Liam O&rsquo;Connor</span>
+                </div>
+                <div style="font-family:var(--font-ui);font-size:0.875rem;">98 Actions</div>
+                <div style="font-family:var(--font-display);font-weight:700;color:var(--emerald-900);">3,450</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="flex:1;height:6px;background:var(--gray-200);border-radius:99px;overflow:hidden;"><div style="width:40%;height:100%;background:#065f46;"></div></div>
+                  <span style="font-size:10px;font-weight:700;color:var(--neutral-700);">72%</span>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:96px 1fr 140px 120px 100px;gap:8px;align-items:center;background:#fff;padding:12px 24px;border-radius:12px;">
+                <div style="font-family:var(--font-display);font-size:1rem;font-weight:700;">#6</div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <img src="assets/avatar-aria.png" width="40" height="40" alt="" style="border-radius:8px;object-fit:cover;" />
+                  <span style="font-family:var(--font-ui);font-weight:700;font-size:0.875rem;">Aria Song</span>
+                </div>
+                <div style="font-family:var(--font-ui);font-size:0.875rem;">85 Actions</div>
+                <div style="font-family:var(--font-display);font-weight:700;color:var(--emerald-900);">3,120</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="flex:1;height:6px;background:var(--gray-200);border-radius:99px;overflow:hidden;"><div style="width:35%;height:100%;background:#065f46;"></div></div>
+                  <span style="font-size:10px;font-weight:700;color:var(--neutral-700);">65%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="impact-summary lb-impact-summary" style="margin-top:24px;">
+            <div class="impact-tile" style="text-align:center;border:1px solid rgba(214,211,209,0.1);">
+              <div style="width:64px;height:64px;margin:0 auto 8px;border-radius:999px;background:var(--emerald-200);display:flex;align-items:center;justify-content:center;"><img src="assets/Icon-16.svg" width="28" height="24" alt="" /></div>
+              <div style="font-family:var(--font-ui);font-size:0.875rem;color:var(--neutral-700);">Active Contributors</div>
+              <div style="font-family:var(--font-display);font-size:1.875rem;font-weight:700;margin:4px 0;">1,204</div>
+              <div style="font-size:10px;font-weight:700;color:#115e59;">+12% from last week</div>
+            </div>
+            <div class="impact-tile" style="text-align:center;border:1px solid rgba(214,211,209,0.1);">
+              <div style="width:64px;height:64px;margin:0 auto 8px;border-radius:999px;background:var(--emerald-200);display:flex;align-items:center;justify-content:center;"><img src="assets/Icon-17.svg" width="24" height="28" alt="" /></div>
+              <div style="font-family:var(--font-ui);font-size:0.875rem;color:var(--neutral-700);">Waste Diverted</div>
+              <div style="font-family:var(--font-display);font-size:1.875rem;font-weight:700;margin:4px 0;">4.2 Tons</div>
+              <div style="font-size:10px;font-weight:700;color:var(--emerald-900);">New Record!</div>
+            </div>
+            <div class="impact-tile" style="text-align:left;padding:32px;background:var(--zinc-100);border-radius:24px;border:none;">
+              <div style="font-family:var(--font-ui);font-size:0.875rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--neutral-700);">Total impact value</div>
+              <div style="font-family:var(--font-display);font-size:3rem;font-weight:800;color:var(--emerald-900);line-height:1;margin-top:12px;">Php 124,500.00</div>
+              <p style="font-family:var(--font-ui);font-size:0.875rem;color:var(--neutral-700);line-height:1.5;margin:12px 0 0;max-width:28rem;">Economic value equivalent generated through community-led sustainability actions this quarter.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Export -->
+        <section class="panel" id="panel-export" hidden aria-labelledby="exp-title">
+          <div class="page-head-dash" style="align-items:flex-end;">
+            <div>
+              <h1 id="exp-title" class="title-dash-platform">Impact Reports &amp; Data Export</h1>
+              <p class="sub">Visualize and extract BatStateU&rsquo;s ecological footprint data.</p>
+            </div>
+            <button type="button" class="btn-export-data">
+              <img src="assets/ui-icons/imp-circle.svg" width="16" height="16" alt="" />
+              Export Data
+            </button>
+          </div>
+
+          <div class="metric-grid">
+            <article class="metric-card">
+              <div class="lbl">Total CO<sub>2</sub> offset</div>
+              <div class="val-row"><span class="num">124.8</span><span class="unit">metric tons</span></div>
+              <div class="chg"><img src="assets/ui-icons/imp-flash.svg" width="10" height="12" alt="" />12% YoY</div>
+            </article>
+            <article class="metric-card">
+              <div class="lbl">Waste diversion rate</div>
+              <div class="val-row"><span class="num">68.4</span><span class="unit">%</span></div>
+              <div class="chg"><img src="assets/ui-icons/imp-flash.svg" width="10" height="12" alt="" />4.2% monthly</div>
+            </article>
+            <article class="metric-card">
+              <div class="lbl">Active bounties</div>
+              <div class="val-row"><span class="num">42</span><span class="unit">projects</span></div>
+            </article>
+            <article class="metric-card">
+              <div class="lbl">Global participants</div>
+              <div class="val-row"><span class="num">12.5k</span><span class="unit">students</span></div>
+              <div class="chg"><img src="assets/ui-icons/imp-flash.svg" width="10" height="12" alt="" />+2k</div>
+            </article>
+          </div>
+
+          <div class="export-grid">
+            <div class="card" style="border-radius:16px;overflow:hidden;box-shadow:0 12px 32px -4px rgba(25,28,28,0.06);padding:0;">
+              <div style="height:4px;background:linear-gradient(180deg,var(--emerald-900),var(--teal-800));"></div>
+              <div style="padding:32px;">
+                <h3 style="font-family:var(--font-display);font-size:1.5rem;font-weight:700;line-height:2rem;margin:0 0 12px;color:#18181b;">Sustainability Data Export</h3>
+                <p style="margin:0 0 40px;font-family:var(--font-ui);font-size:1rem;line-height:1.5rem;color:var(--neutral-700);">Generate and download a comprehensive sustainability report in PDF format for GreenMetric certification and internal audits. Access granular data across all verified campus actions.</p>
+                <div style="padding:32px;background:var(--zinc-100);border-radius:12px;border:1px solid rgba(214,211,209,0.1);text-align:center;margin-bottom:40px;">
+                  <div style="width:96px;height:96px;margin:0 auto;position:relative;">
+                    <div style="width:96px;height:96px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 32px -4px rgba(25,28,28,0.06);">
+                      <img src="assets/Icon-18.svg" width="20" height="20" alt="" />
+                    </div>
+                  </div>
+                  <div style="padding-top:24px;">
+                    <button type="button" class="btn-export-report">
+                      <span>Export Sustainability Report</span>
+                      <img src="assets/Icon-24.svg" width="20" height="20" alt="" />
+                    </button>
+                  </div>
+                </div>
+                <div style="padding:24px;background:#ecfdf5;border-radius:12px;border-left:4px solid var(--emerald-900);margin-bottom:40px;">
+                  <p style="margin:0;font-family:var(--font-display);font-size:1.125rem;line-height:1.75rem;font-weight:400;color:var(--teal-800);">&ldquo;Every action students took today is now one row in BatStateU&rsquo;s sustainability report.<br />No paper forms. No manual encoding. Just Verde.&rdquo;</p>
+                </div>
+                <h4 style="margin:0 0 16px;font-family:var(--font-display);font-size:1rem;font-weight:700;color:#18181b;">Recent Exports</h4>
+                <ul class="file-list">
+                  <li class="file-item" style="padding:16px;background:#fff;border-radius:12px;border:none;margin-bottom:12px;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                      <div style="width:32px;height:32px;background:#f5f5f4;border-radius:6px;display:flex;align-items:center;justify-content:center;"><img src="assets/Icon-24.svg" width="20" height="20" alt="" /></div>
+                      <div><strong style="font-family:var(--font-ui);font-size:0.875rem;">ImpactAudit.pdf</strong><br><span style="font-size:10px;color:var(--neutral-700);">2.4 MB &middot; 2 days ago</span></div>
+                    </div>
+                  </li>
+                  <li class="file-item" style="padding:16px;background:#fff;border-radius:12px;border:none;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                      <div style="width:32px;height:32px;background:#f5f5f4;border-radius:6px;display:flex;align-items:center;justify-content:center;"><img src="assets/Icon-24.svg" width="20" height="20" alt="" /></div>
+                      <div><strong style="font-family:var(--font-ui);font-size:0.875rem;">Prog_Report.pdf</strong><br><span style="font-size:10px;color:var(--neutral-700);">1.1 MB &middot; 1 week ago</span></div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="gm-card-v2">
+              <div class="gm-card-v2-inner">
+                <h3 class="gm-v2-title">GreenMetric<br />Readiness</h3>
+                <div class="gm-v2-pct-row">
+                  <span class="gm-v2-big">82%</span>
+                  <span class="gm-v2-sub">Verified Data</span>
+                </div>
+                <p class="gm-v2-copy">You are only 1,200 data points away from a &lsquo;Platinum&rsquo; sustainability rating. Download the audit report to identify gaps.</p>
+                <button type="button" class="gm-v2-cta">View Requirements</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var navItems = document.querySelectorAll(".nav-item");
+      var panels = {
+        dashboard: document.getElementById("panel-dashboard"),
+        verifications: document.getElementById("panel-verifications"),
+        leaderboard: document.getElementById("panel-leaderboard"),
+        export: document.getElementById("panel-export")
+      };
+
+      function showPanel(id) {
+        Object.keys(panels).forEach(function (key) {
+          var el = panels[key];
+          if (!el) return;
+          var on = key === id;
+          el.classList.toggle("is-visible", on);
+          el.hidden = !on;
+        });
+        navItems.forEach(function (li) {
+          li.classList.toggle("is-active", li.getAttribute("data-nav") === id);
+        });
+      }
+
+      navItems.forEach(function (li) {
+        li.querySelector("button").addEventListener("click", function () {
+          showPanel(li.getAttribute("data-nav"));
+        });
+      });
+
+      // Top quick actions → navigate
+      document.querySelectorAll(".page-actions .btn-ghost").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var t = (btn.textContent || "").toLowerCase();
+          if (t.indexOf("leaderboard") !== -1) showPanel("leaderboard");
+          if (t.indexOf("export") !== -1) showPanel("export");
+        });
+      });
+
+      document.querySelectorAll(".pill-tabs button").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var root = btn.closest(".pill-tabs");
+          if (!root) return;
+          root.querySelectorAll("button").forEach(function (b) {
+            b.classList.toggle("is-on", b === btn);
+          });
+        });
+      });
+
+      document.querySelectorAll(".lb-seg button").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var root = btn.closest(".lb-seg");
+          if (!root) return;
+          root.querySelectorAll("button").forEach(function (b) {
+            b.classList.toggle("is-on", b === btn);
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
