@@ -209,11 +209,12 @@ function StudentPage() {
   }, [selectedBounty]);
 
   return (
-    <main className="min-h-screen bg-[#1a1d23] p-4 font-sans text-zinc-900">
+    <main className="min-h-screen bg-[#1a1d23] p-0 sm:p-4 font-sans text-zinc-900">
       {!store.displayName && <NameModal onSave={store.setDisplayName} />}
-      <div className="mx-auto flex max-w-[1200px] flex-wrap items-start justify-center gap-6">
+      <div className="mx-auto flex max-w-[1200px] flex-wrap items-start justify-center gap-0 sm:gap-6">
         <PhoneFrame>
-          <div className="flex items-center justify-between border-b border-[#edf1f3] px-4 py-3">
+          <div className="flex h-screen sm:h-[640px] flex-col overflow-hidden">
+            <div className="flex shrink-0 items-center justify-between border-b border-[#edf1f3] px-4 py-3">
             <div className="text-xl font-semibold text-[#00a15e]">☰ Verde</div>
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-[#d8f7e7] px-3 py-0.5 text-xs font-semibold text-[#087f46]">
@@ -225,38 +226,14 @@ function StudentPage() {
             </div>
           </div>
 
-          {activeScreen === "home" && (
+          <div className="flex-1 overflow-y-auto scrollbar-hide">
+            {activeScreen === "home" && (
             <div className="space-y-4 px-4 pt-4 pb-3">
               <h1 className="text-[25px] font-semibold leading-[0.95] tracking-[-0.03em] text-[#1b1d22]">
                 Good morning,
                 <br />
                 <span className="text-[#008b4e]">{store.displayName || "Username"}</span>
               </h1>
-
-              <div>
-                <div className="mb-2 flex items-center justify-between">
-                  <h2 className="text-[16px] font-semibold leading-none tracking-[-0.02em] text-[#1d2025]">
-                    Top Contributors
-                  </h2>
-                  <button type="button" onClick={() => setActiveScreen("leaderboard")} className="text-xs font-semibold text-[#4e8b7a]">
-                    View All →
-                  </button>
-                </div>
-                <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1">
-                  {topContributors.map((item) => (
-                    <div
-                      key={item.name}
-                      className="min-w-[95px] rounded-2xl border border-[#eff2f4] bg-white p-2 text-center shadow-[0_4px_14px_rgba(0,0,0,0.06)]"
-                    >
-                      <div className="mx-auto mb-1 grid h-11 w-11 place-items-center rounded-full bg-[#d8ecf6] text-base font-semibold text-[#1f2630]">
-                        {item.name[0]}
-                      </div>
-                      <div className="text-[11px] font-semibold text-[#1f2630]">{item.name}</div>
-                      <div className="text-[10px] text-[#7b8893]">{item.points}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
 
               <div>
                 <div className="mb-2 flex items-center justify-between">
@@ -466,9 +443,6 @@ function StudentPage() {
                 </button>
                 <div className="mt-2 text-center text-[8px] tracking-[0.2em] text-[#adb5bc]">VERDE BLOCKCHAIN SECURED</div>
               </article>
-              <button type="button" onClick={() => setActiveScreen("home")} className="w-full rounded-2xl border border-[#dfe5e8] py-2 text-sm text-[#5f6b75]">
-                Back
-              </button>
             </div>
           )}
 
@@ -489,7 +463,7 @@ function StudentPage() {
                   {hasGeminiKey ? "Gemini" : "AI insight"}
                 </p>
                 <p className="mt-2 text-[13px] italic text-[#66727b]">
-                  &ldquo;{result.geminiLoading ? "…" : result.geminiReason || result.reason}&rdquo;
+                  &ldquo;{result.geminiLoading ? "…" : (result.adminNote ? `Admin Feedback: ${result.adminNote}` : (result.geminiReason || result.reason))}&rdquo;
                 </p>
                 {result.verdict === "rejected" && Array.isArray(result.missingElements) && result.missingElements.length > 0 && (
                   <div className="mt-3 rounded-2xl border border-[#ffd7d7] bg-[#fff4f4] p-3 text-left">
@@ -614,44 +588,6 @@ function StudentPage() {
                 })}
               </div>
 
-              <div className="rounded-2xl bg-[#022317] p-3 text-white">
-                <div className="mb-2 flex items-center justify-between">
-                  <h3 className="text-[16px] font-semibold">Campus SDG Impact</h3>
-                  <span aria-hidden>📊</span>
-                </div>
-                <div className="space-y-2 text-[8px] font-semibold uppercase tracking-wide">
-                  <div>
-                    <div className="mb-1 flex justify-between">
-                      <span className="text-[#f59e0b]">SDG 12 Responsible Consumption</span>
-                      <span className="text-[#f59e0b]">78%</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-[#184535]">
-                      <div className="h-2 rounded-full bg-[#f59e0b]" style={{ width: "78%" }} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="mb-1 flex justify-between">
-                      <span className="text-[#2dd4bf]">SDG 13 Climate Action</span>
-                      <span className="text-[#2dd4bf]">64%</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-[#184535]">
-                      <div className="h-2 rounded-full bg-[#2dd4bf]" style={{ width: "64%" }} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="mb-1 flex justify-between">
-                      <span className="text-[#60a5fa]">SDG 11 Sustainable Cities</span>
-                      <span className="text-[#60a5fa]">42%</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-[#184535]">
-                      <div className="h-2 rounded-full bg-[#60a5fa]" style={{ width: "42%" }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <button type="button" onClick={() => setActiveScreen("home")} className="w-full rounded-2xl border border-[#dfe5e8] py-2 text-sm text-[#5f6b75]">
-                Back
-              </button>
             </div>
           )}
 
@@ -777,24 +713,23 @@ function StudentPage() {
                   ))}
                 </div>
               </div>
-              <button type="button" onClick={() => setActiveScreen("home")} className="w-full rounded-2xl border border-[#dfe5e8] py-2 text-sm text-[#5f6b75]">
-                Back
-              </button>
             </div>
           )}
+            </div>
 
-          <BottomNav
-            active={
-              activeScreen === "wallet"
-                ? "Wallet"
-                : activeScreen === "leaderboard"
-                  ? "Rankings"
-                  : activeScreen === "bounties"
-                    ? "Bounties"
-                    : "Home"
-            }
-            onSelect={handleNavSelect}
-          />
+            <BottomNav
+              active={
+                activeScreen === "wallet"
+                  ? "Wallet"
+                  : activeScreen === "leaderboard"
+                    ? "Rankings"
+                    : activeScreen === "bounties"
+                      ? "Bounties"
+                      : "Home"
+              }
+              onSelect={handleNavSelect}
+            />
+          </div>
         </PhoneFrame>
       </div>
     </main>

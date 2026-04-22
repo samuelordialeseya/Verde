@@ -96,6 +96,7 @@ export async function generateRedemptionToken(studentId, coinsToRedeem) {
 
   const expiresAt = new Date(Date.now() + TOKEN_EXPIRY_MS).toISOString();
 
+  // Create the token document
   const tokenRef = await addDoc(collection(db, REDEMPTION_TOKENS), {
     studentId,
     displayName: student.displayName,
@@ -109,6 +110,13 @@ export async function generateRedemptionToken(studentId, coinsToRedeem) {
   });
 
   return tokenRef.id;
+}
+
+export async function getRedemptionToken(tokenId) {
+  const tokenRef = doc(db, REDEMPTION_TOKENS, tokenId);
+  const tokenSnap = await getDoc(tokenRef);
+  if (!tokenSnap.exists()) return null;
+  return { id: tokenSnap.id, ...tokenSnap.data() };
 }
 
 export async function processRedemption(tokenId, vendorId) {
@@ -127,7 +135,8 @@ export async function processRedemption(tokenId, vendorId) {
     throw new Error("ALREADY_REDEEMED");
   }
 
-  const newBalance = await deductCoins(token.studentId, token.coinsToRedeem, tokenId);
+  // Note: coins are already deducted (escrowed) when the token was created.
+  // We just mark it as redeemed here.
 
   await updateDoc(tokenRef, {
     isRedeemed: true,
@@ -139,7 +148,6 @@ export async function processRedemption(tokenId, vendorId) {
     studentName: token.displayName,
     coinsRedeemed: token.coinsToRedeem,
     pesoEquivalent: token.pesoEquivalent,
-    remainingBalance: newBalance,
     redeemedAt: new Date().toISOString(),
   };
 }

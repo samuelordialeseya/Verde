@@ -26,12 +26,11 @@ function IconGear() {
 
 function TopNav() {
   return (
-    <header className="flex items-center justify-between border-b border-[#e6e9eb] px-3.5 py-3">
+    <header className="sticky top-0 z-50 flex shrink-0 items-center justify-between border-b border-[#e6e9eb] bg-[#f8faf9] px-3.5 py-3">
       <div className="flex items-center gap-2">
         <IconMenu />
         <span className="text-[18px] font-semibold text-[#00A15E]">Verde</span>
       </div>
-      <IconGear />
     </header>
   );
 }
@@ -165,9 +164,13 @@ function QrTile({ success = true }) {
 
 function AppShell({ children }) {
   return (
-    <main className="min-h-screen bg-[#1a1d23] p-4 font-sans text-zinc-900">
+    <main className="min-h-screen bg-[#1a1d23] p-0 sm:p-4 font-sans text-zinc-900">
       <div className="mx-auto flex max-w-[1200px] justify-center">
-        <PhoneFrame>{children}</PhoneFrame>
+        <PhoneFrame>
+          <div className="flex h-screen sm:h-[640px] flex-col overflow-hidden bg-[#f8faf9]">
+            {children}
+          </div>
+        </PhoneFrame>
       </div>
     </main>
   );
@@ -191,15 +194,20 @@ export default function VendorPage() {
 
   const vendorName = id === "1" ? "Main Canteen" : id === "2" ? "Print Shop" : `Vendor ${id}`;
 
-  const handleScan = (tokenText) => {
+  const handleScan = async (tokenText) => {
     // Extract rdm- ID if it's embedded in a string, otherwise use raw text
     const rdmMatch = tokenText.match(/rdm-[a-z0-9]+/i);
     const parsedToken = rdmMatch ? rdmMatch[0] : tokenText.trim();
     
-    console.log("Scanned Token:", parsedToken); // Add log for debugging
-    const res = consumeRedemptionToken(parsedToken);
-    setResultData(res);
-    setViewState(res.ok ? "success" : "error");
+    console.log("Scanned Token:", parsedToken);
+    try {
+      const res = await consumeRedemptionToken(parsedToken, vendorName);
+      setResultData(res);
+      setViewState(res.ok ? "success" : "error");
+    } catch (err) {
+      console.error(err);
+      setViewState("error");
+    }
     codeReaderRef.current?.reset();
   };
 
@@ -338,7 +346,7 @@ export default function VendorPage() {
     return (
       <AppShell>
         <TopNav />
-        <div className="px-3.5 pt-8 pb-5">
+        <div className="flex-1 overflow-y-auto scrollbar-hide px-3.5 pt-8 pb-5">
           <QrTile success />
           <div className="mt-14 text-center">
             <p className="text-[9px] font-semibold tracking-[0.18em] text-[#4d7e68] uppercase">Action Completed</p>
@@ -392,7 +400,7 @@ export default function VendorPage() {
     return (
       <AppShell>
         <TopNav />
-        <div className="px-3.5 pt-8 pb-5">
+        <div className="flex-1 overflow-y-auto scrollbar-hide px-3.5 pt-8 pb-5">
           <QrTile success={false} />
           <div className="mt-14 text-center">
             <p className="text-[9px] font-semibold tracking-[0.18em] text-[#a25555] uppercase">Action Failed</p>
@@ -442,18 +450,12 @@ export default function VendorPage() {
   return (
     <AppShell>
       <TopNav />
-      <div className="px-3.5 pt-5 pb-5">
+      <div className="flex-1 overflow-y-auto scrollbar-hide px-3.5 pt-5 pb-5">
         <div className="mb-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-[#70f39f] px-2 py-1 text-[9px] font-semibold tracking-[0.12em] text-[#0a7e49] uppercase">Official Partner</span>
             <span className="inline-flex items-center gap-1 text-[9px] font-semibold tracking-[0.12em] text-[#6f7780] uppercase"><span className="h-1.5 w-1.5 rounded-full bg-[#0a7e49]" />Live Session</span>
           </div>
-          <button onClick={() => setViewState("idle")} className="text-zinc-400 hover:text-zinc-600">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
         </div>
 
         <h1 className="text-[28px] leading-[1.05] font-bold tracking-[-0.02em] text-[#151a1f]">{vendorName}</h1>

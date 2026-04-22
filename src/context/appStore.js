@@ -1,7 +1,9 @@
 import { create } from "zustand";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { db } from "../lib/firebase";
 import { subscribeToBountyFeed } from "../services/bounties";
 import { subscribeToStudent, getLocalIdentity, createStudentIdentity, subscribeToLeaderboard } from "../services/students";
-import { subscribeToTransactions, generateRedemptionToken, deductCoins, creditCoins } from "../services/wallet";
+import { subscribeToTransactions, generateRedemptionToken, deductCoins, creditCoins, processRedemption, getRedemptionToken } from "../services/wallet";
 import { submitBountyProof, getStudentSubmissions } from "../services/submissions";
 
 const ls = {
@@ -29,6 +31,7 @@ export const useAppStore = create((set, get) => ({
   bounties: [],
   claims: [],
   submissions: [],
+  allSubmissions: [],
   leaderboard: [],
   transactions: [],
   pendingRedemption: null,
@@ -54,8 +57,11 @@ export const useAppStore = create((set, get) => ({
         leaderboard: topStudents.map(s => ({
           id: s.id,
           displayName: s.displayName,
+          points: s.totalEarned || 0,
           totalEarned: s.totalEarned || 0,
-          approvedCount: (s.totalEarned || 0) / 25
+          photoURL: s.photoURL || null,
+          approvedCount: (s.totalEarned || 0) / 25,
+          submissionsCount: (s.totalEarned || 0) / 25 // approximate
         }))
       });
     });
@@ -88,6 +94,47 @@ export const useAppStore = create((set, get) => ({
       unsubBounties();
       unsubLeaderboard();
     };
+  },
+
+  adminInitialize: () => {
+    // Subscribe to ALL submissions for the admin dashboard
+    const unsubAllSubmissions = onSnapshot(
+      query(collection(db, "submissions"), orderBy("submittedAt", "desc")),
+      (snap) => {
+        const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        set({ allSubmissions: list });
+      }
+    );
+
+    // Subscribe to ALL claims (if needed for global stats)
+    const unsubAllClaims = onSnapshot(collection(db, "claims"), (snap) => {
+      set({ claims: snap.docs.map(d => ({ id: d.id, ...d.data() })) });
+    });
+
+    return () => {
+      unsubAllSubmissions();
+      unsubAllClaims();
+    };
+  },
+
+  approveSubmission: async (submissionId, note) => {
+    try {
+      const { adminApproveSubmission } = await import("../services/submissions");
+      await adminApproveSubmission(submissionId, note);
+    } catch (err) {
+      console.error("Failed to approve:", err);
+      throw err;
+    }
+  },
+
+  rejectSubmission: async (submissionId, note) => {
+    try {
+      const { adminRejectSubmission } = await import("../services/submissions");
+      await adminRejectSubmission(submissionId, note);
+    } catch (err) {
+      console.error("Failed to reject:", err);
+      throw err;
+    }
   },
 
   _subscribeToStudentData: (studentId) => {
@@ -185,55 +232,45 @@ export const useAppStore = create((set, get) => ({
     }
   },
 
-  consumeRedemptionToken: (tokenId) => {
-    let state = get();
-    let token = state.pendingRedemption;
-    
-    // DEMO MODE FALLBACK: If token still not found, create a virtual one for testing
-    if (!token || token.id !== tokenId) {
-      token = {
-        id: tokenId,
-        studentId: "demo-student",
-        displayName: "Demo Student",
-        amount: 50,
-        status: "pending",
-        expiresAt: Date.now() + 13 * 60 * 1000,
+  consumeRedemptionToken: async (tokenId, vendorId = "generic-vendor") => {
+    try {
+      const token = await getRedemptionToken(tokenId);
+      
+      if (!token) return { ok: false, message: "Token not found.", errorType: "not_found" };
+      
+      if (new Date(token.expiresAt) < new Date()) {
+        return { ok: false, message: "Token expired.", errorType: "expired", token };
+      }
+      
+      if (token.isRedeemed) {
+        return { ok: false, message: "Token already redeemed.", errorType: "already_redeemed", token };
+      }
+
+      const result = await processRedemption(tokenId, vendorId);
+      
+      const updatedToken = { 
+        ...token, 
+        status: "redeemed", 
+        isRedeemed: true,
+        redeemedAt: result.redeemedAt 
       };
+
+      // If we are the student who owns the token, update local state
+      const { studentId } = get();
+      if (token.studentId === studentId) {
+        set({ pendingRedemption: updatedToken });
+        ls.set("verde-pending-redemption", updatedToken);
+      }
+
+      return {
+        ok: true,
+        message: `${token.coinsToRedeem} coins redeemed - ${token.displayName} - P${result.pesoEquivalent} discount`,
+        token: updatedToken,
+      };
+    } catch (err) {
+      console.error("Redemption error:", err);
+      return { ok: false, message: err.message, errorType: "system_error" };
     }
-
-    if (!token || token.id !== tokenId) return { ok: false, message: "Token not found.", errorType: "not_found" };
-    if (isTokenExpired(token)) {
-      const expiredToken = { ...token, status: "expired" };
-      set({ pendingRedemption: expiredToken });
-      ls.set("verde-pending-redemption", expiredToken);
-      return { ok: false, message: "Token expired.", errorType: "expired", token: expiredToken };
-    }
-    if (token.status !== "pending") return { ok: false, message: "Token already redeemed.", errorType: "already_redeemed", token };
-    // Balance check is handled during creation (Escrow System)
-
-    const updatedToken = { ...token, status: "redeemed", redeemedAt: new Date().toISOString() };
-    
-    const redemptionTx = {
-      id: `tx-${uid()}`,
-      type: "redeemed",
-      amount: token.amount,
-      description: `Redeemed: ${token.amount} points`,
-      timestamp: updatedToken.redeemedAt,
-    };
-
-    set({
-      pendingRedemption: updatedToken,
-      transactions: [redemptionTx, ...state.transactions],
-    });
-    
-    ls.set("verde-pending-redemption", updatedToken);
-    ls.set("verde-transactions", [redemptionTx, ...state.transactions]);
-
-    return {
-      ok: true,
-      message: `${token.amount} coins redeemed - ${token.displayName} - P${Math.floor(token.amount / 10)} discount`,
-      token: updatedToken,
-    };
   },
 
   clearPendingRedemption: () => {

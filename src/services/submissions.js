@@ -112,15 +112,15 @@ export async function submitBountyProof(studentId, bountyId, photoFile) {
     throw new Error("ALREADY_CLAIMED");
   }
 
-  const bountyRef = doc(db, "bounties", bountyId);
-  const bountySnap = await getDoc(bountyRef);
-  if (!bountySnap.exists()) throw new Error("Bounty not found");
-  const bounty = bountySnap.data();
+  const studentSnap = await getDoc(doc(db, "students", studentId));
+  const student = studentSnap.exists() ? studentSnap.data() : { displayName: "Student" };
 
   const photoUrl = await uploadSubmissionPhoto(studentId, bountyId, photoFile);
 
   const submissionRef = await addDoc(collection(db, COLLECTION), {
     studentId,
+    studentName: student.displayName || "Student",
+    studentAvatar: student.photoURL || null,
     bountyId,
     bountyTitle: bounty.title,
     theme: bounty.theme,
