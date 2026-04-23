@@ -1,4 +1,43 @@
+# Dependencies
 node_modules
+.pnp
+.pnp.js
+
+# Testing
+coverage
+
+# Production
 dist
+build
+
+# Misc
 .DS_Store
 *.log
+vdoc.py
+.venv
+venv
+ENV
+env
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Firebase
+.firebase
+firestore.indexes.json
+firestore.rules
+storage.rules
+firebase-debug.log
+ui-debug.log
+*.runtimeconfig.json
+
+# Internal/AI generated
+agent-transcripts
+terminals
+mcps
+verde-admin
+verde_prd1.md
+.DS_Store

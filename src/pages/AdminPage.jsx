@@ -77,7 +77,7 @@ export default function AdminPage() {
       verdict: s.verdict,
       confidence: s.confidence,
       submittedAt: s.submittedAt,
-      photoEvidence: s.photoURL || "No Photo"
+      photoEvidence: s.photoUrl || s.photoURL || "No Photo"
     })));
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a");
@@ -258,20 +258,23 @@ export default function AdminPage() {
                         <span>Ongoing EcoMissions Participation</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#404040" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
                       </div>
-                      {ecoMissions.filter(b => b.isActive).sort((a, b) => (b.claimCount || 0) - (a.claimCount || 0)).slice(0, 8).map((ecoMission, idx) => {
+                      <div className="participation-scroll">
+                      {ecoMissions.filter(b => b.isActive).sort((a, b) => (b.claimCount || 0) - (a.claimCount || 0)).map((ecoMission, idx) => {
                         const count = ecoMission.claimCount || 0;
                         const max = Math.max(1, Math.max(...ecoMissions.map(b => b.claimCount || 0)));
                         const pct = Math.round((count / max) * 100);
+                        const sdgNum = ecoMission.sdgNumber || ecoMission.sdgTag || "";
                         return (
                           <div key={ecoMission.id} className="sdg-bar-block">
                             <div className="bar-info">
-                              <div className="name">{idx + 1}. {ecoMission.title}</div>
+                              <div className="name">{idx + 1}. {sdgNum ? `SDG ${sdgNum}: ` : ""}{ecoMission.title}</div>
                               <div className="ct">{count} students</div>
                             </div>
                             <div className="sdg-track"><span style={{ width: `${Math.max(5, pct)}%`, background: 'var(--teal-800)' }}></span></div>
                           </div>
                         );
                       })}
+                      </div>
                       <div className="sdg-card-v2-ft">Real-time engagement tracking</div>
                     </div>
 
@@ -702,9 +705,9 @@ export default function AdminPage() {
                   </div>
                 </div>
                 <div className="field">
-                  <label>Coins reward</label>
+                  <label>Leaves reward</label>
                   <div className="control">
-                    <input name="coins" type="number" placeholder="500" required />
+                    <input name="coins" type="number" placeholder="100" required />
                   </div>
                 </div>
                 <div className="field">

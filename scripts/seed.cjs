@@ -45,8 +45,8 @@ const BOUNTIES = [
     sdgTag: 12,
     sdgNumber: 12,
     sdgLabel: "SDG 12 - Responsible Consumption and Production",
-    coinReward: 50,
-    coinsReward: 50,
+    coinReward: 100,
+    coinsReward: 100,
     mediaType: "photo",
     aiVerificationHint: "Reusable container with beverage visible in a campus canteen setting. Reject desk-only shots.",
     isActive: true,
@@ -57,15 +57,15 @@ const BOUNTIES = [
   },
   {
     id: "bounty-lights",
-    title: "Lights Off in Empty Classroom",
-    description: "Turn off lights in an empty classroom and document the action.",
+    title: "Lights Off in Empty Room",
+    description: "Turn off lights in an empty classroom to save energy.",
     instructions: "Classroom interior must be visible with lights off and switch in OFF position.",
     theme: "energy",
     sdgTag: 13,
     sdgNumber: 13,
     sdgLabel: "SDG 13 - Climate Action",
-    coinReward: 40,
-    coinsReward: 40,
+    coinReward: 80,
+    coinsReward: 80,
     mediaType: "photo",
     aiVerificationHint: "Empty classroom context required, lights off, and switch visible in OFF state.",
     isActive: true,
@@ -76,15 +76,15 @@ const BOUNTIES = [
   },
   {
     id: "bounty-segregate",
-    title: "Segregate Plastic Correctly",
+    title: "Correct Waste Segregation",
     description: "Dispose plastic waste into the correct segregation bin.",
     instructions: "Plastic item must be visibly inside the bin opening with label/color visible.",
     theme: "waste",
     sdgTag: 11,
     sdgNumber: 11,
     sdgLabel: "SDG 11 - Sustainable Cities and Communities",
-    coinReward: 30,
-    coinsReward: 30,
+    coinReward: 50,
+    coinsReward: 50,
     mediaType: "photo",
     aiVerificationHint: "Item must be entering the correct bin opening; reject near-bin photos.",
     isActive: true,
@@ -102,15 +102,53 @@ const BOUNTIES = [
     sdgTag: 12,
     sdgNumber: 12,
     sdgLabel: "SDG 12 - Responsible Consumption and Production",
-    coinReward: 60,
-    coinsReward: 60,
+    coinReward: 120,
+    coinsReward: 120,
     mediaType: "photo",
-    aiVerificationHint: "Full meal tray in frame and no plastic wrappers or utensils visible.",
+    aiVerificationHint: "Meal tray visible with no plastic utensils, straws, or wrappers.",
     isActive: true,
     claimCount: 0,
     submissionCount: 0,
     expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "bounty-carpool",
+    title: "Carpool to Campus",
+    description: "Share a ride with classmates to reduce carbon emissions.",
+    instructions: "Photo of at least 3 students inside a car with campus landmark in background.",
+    theme: "energy",
+    sdgTag: 13,
+    sdgNumber: 13,
+    sdgLabel: "SDG 13 - Climate Action",
+    coinReward: 150,
+    coinsReward: 150,
+    mediaType: "photo",
+    aiVerificationHint: "Group of students in a vehicle, campus context required.",
+    isActive: true,
+    claimCount: 0,
+    submissionCount: 0,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "bounty-compost",
+    title: "Compost Food Waste",
+    description: "Dispose of food scraps in the designated composting bin.",
+    instructions: "Photo of food waste being placed into a compost bin.",
+    theme: "waste",
+    sdgTag: 11,
+    sdgNumber: 11,
+    sdgLabel: "SDG 11 - Sustainable Cities and Communities",
+    coinReward: 70,
+    coinsReward: 70,
+    mediaType: "photo",
+    aiVerificationHint: "Food waste clearly going into a composting bin.",
+    isActive: true,
+    claimCount: 0,
+    submissionCount: 0,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
   },
   {
     id: "bounty-charger",
@@ -205,7 +243,7 @@ async function clearSeedCollections() {
   await clearCollection("submissions");
   await clearCollection("claims");
   await clearCollection("vendors");
-  await clearCollection("bounties");
+  await clearCollection("ecoMissions");
   await clearCollection("transactions");
 }
 
@@ -228,7 +266,7 @@ async function seedBounties() {
 
   BOUNTIES.forEach((bounty) => {
     const { id, ...data } = bounty;
-    const ref = db.collection("bounties").doc(id);
+    const ref = db.collection("ecoMissions").doc(id);
     batch.set(ref, data);
   });
 
@@ -436,8 +474,8 @@ async function seedStudentsAndSubmissions() {
   }
 
   const bountyUpdates = db.batch();
-  Object.entries(bountyClaimCounts).forEach(([bountyId, count]) => {
-    const ref = db.collection("bounties").doc(bountyId);
+  Object.entries(bountyClaimCounts).forEach(([ecoMissionId, count]) => {
+    const ref = db.collection("ecoMissions").doc(ecoMissionId);
     bountyUpdates.update(ref, {
       claimCount: count,
       submissionCount: count,

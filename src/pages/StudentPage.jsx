@@ -383,7 +383,7 @@ function StudentPage() {
                         "Show your reusable cup at the canteen to earn coins and reduce single-use waste across campus."}
                     </p>
                     <div className="mt-3 rounded-2xl bg-[#eaffe9] px-3 py-2 text-[12px] font-semibold text-[#007f43]">
-                      $ Estimated Reward {selectedEcoMission?.coinReward || 25} coins
+                      Estimated Reward {selectedEcoMission?.coinReward || 25} Leaves
                     </div>
                     <div className="mt-4 text-[12px] font-semibold tracking-[0.12em] text-[#454d56]">EVIDENCE</div>
                     <div className="mt-2 rounded-2xl border border-[#dbe7df] bg-[#f3fbf6] p-3">
@@ -502,7 +502,7 @@ function StudentPage() {
                     )}
                     {result.verdict !== "flagged" && (
                       <div className="mt-3 text-[14px] text-[#2b323a]">
-                        New balance: <span className="font-semibold">{store.coinBalance} coins</span>
+                        New balance: <span className="font-semibold">{store.coinBalance} Leaves</span>
                       </div>
                     )}
                     {result.verdict === "approved" && (
@@ -591,7 +591,7 @@ function StudentPage() {
                           </div>
                           <div className="text-right text-[#00914f]">
                             <div className="text-[16px] font-semibold leading-none">{entry.totalEarned.toLocaleString()}</div>
-                            <div className="text-[8px] font-semibold tracking-[0.15em] text-[#97a4ad]">COINS</div>
+                            <div className="text-[8px] font-semibold tracking-[0.15em] text-[#97a4ad]">LEAVES</div>
                           </div>
                         </div>
                       );

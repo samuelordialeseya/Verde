@@ -63,8 +63,8 @@ export const useAppStore = create((set, get) => ({
           points: s.totalEarned || 0,
           totalEarned: s.totalEarned || 0,
           photoURL: s.photoURL || null,
-          approvedCount: (s.totalEarned || 0) / 25,
-          submissionsCount: (s.totalEarned || 0) / 25 // approximate
+          approvedCount: s.approvedCount || Math.floor((s.totalEarned || 0) / 100),
+          submissionsCount: s.submissionCount || Math.floor((s.totalEarned || 0) / 100)
         }))
       });
     });
