@@ -77,13 +77,13 @@ export function subscribeToAllTimeStats(callback) {
     const totalActions = submissions.length;
     const uniqueStudents = new Set(submissions.map((s) => s.studentId)).size;
     
-    // Calculate most completed bounty
-    const bountyCounts = {};
+    // Calculate most completed EcoMission
+    const ecoMissionCounts = {};
     submissions.forEach(s => {
-      bountyCounts[s.bountyTitle] = (bountyCounts[s.bountyTitle] || 0) + 1;
+      ecoMissionCounts[s.ecoMissionTitle] = (ecoMissionCounts[s.ecoMissionTitle] || 0) + 1;
     });
     
-    const mostPopular = Object.entries(bountyCounts)
+    const mostPopular = Object.entries(ecoMissionCounts)
       .sort((a, b) => b[1] - a[1])[0]?.[0] || "None yet";
 
     callback({ 
@@ -151,7 +151,7 @@ export async function getCSVExportData() {
     return {
       date: new Date(s.submittedAt).toLocaleDateString("en-PH"),
       student_name: studentMap[s.studentId] || "Unknown",
-      bounty_title: s.bountyTitle,
+      ecoMission_title: s.ecoMissionTitle,
       theme: s.theme,
       sdg_number: s.sdgNumber,
       sdg_label: s.sdgLabel,

@@ -25,31 +25,31 @@ export const VERDICT = {
   FLAGGED: "flagged",
 };
 
-export async function hasExistingClaim(studentId, bountyId) {
+export async function hasExistingClaim(studentId, ecoMissionId) {
   const q = query(
     collection(db, CLAIMS_COLLECTION),
     where("studentId", "==", studentId),
-    where("bountyId", "==", bountyId)
+    where("ecoMissionId", "==", ecoMissionId)
   );
   const snap = await getDocs(q);
   return !snap.empty;
 }
 
-async function uploadSubmissionPhoto(studentId, bountyId, photoFile) {
+async function uploadSubmissionPhoto(studentId, ecoMissionId, photoFile) {
   if (!photoFile) {
     console.warn("No photo file provided; using dummy url for testing.");
     return "https://picsum.photos/400/300"; 
   }
 
   const timestamp = Date.now();
-  const path = `submissions/${studentId}/${bountyId}/${timestamp}.jpg`;
+  const path = `submissions/${studentId}/${ecoMissionId}/${timestamp}.jpg`;
   const storageRef = ref(storage, path);
 
   await uploadBytes(storageRef, photoFile);
   return await getDownloadURL(storageRef);
 }
 
-async function callGeminiVerification(photoUrl, bounty) {
+async function callGeminiVerification(photoUrl, ecoMission) {
   if (Date.now() < aiRetryAfterMs) {
     return {
       verdict: VERDICT.FLAGGED,
@@ -67,10 +67,10 @@ async function callGeminiVerification(photoUrl, bounty) {
     : `https://${region}-${projectId}.cloudfunctions.net/verifyEcoActionHttp`;
   const payload = {
     photoUrl,
-    bountyTitle: bounty.title,
-    bountyDescription: bounty.description,
-    bountyInstructions: bounty.instructions,
-    aiVerificationHint: bounty.aiVerificationHint,
+    ecoMissionTitle: ecoMission.title,
+    ecoMissionDescription: ecoMission.description,
+    ecoMissionInstructions: ecoMission.instructions,
+    aiVerificationHint: ecoMission.aiVerificationHint,
   };
 
   const requestOnce = async () => {
@@ -106,26 +106,44 @@ async function callGeminiVerification(photoUrl, bounty) {
   return data;
 }
 
-export async function submitBountyProof(studentId, bountyId, photoFile) {
-  const alreadyClaimed = await hasExistingClaim(studentId, bountyId);
+export async function submitEcoMissionProof(studentId, ecoMissionId, photoFile) {
+  const alreadyClaimed = await hasExistingClaim(studentId, ecoMissionId);
   if (alreadyClaimed) {
     throw new Error("ALREADY_CLAIMED");
   }
 
   const studentSnap = await getDoc(doc(db, "students", studentId));
-  const student = studentSnap.exists() ? studentSnap.data() : { displayName: "Student" };
+  let student = studentSnap.exists() ? studentSnap.data() : null;
 
-  const photoUrl = await uploadSubmissionPhoto(studentId, bountyId, photoFile);
+  if (!student) {
+    // Recreate student if missing (e.g. after DB reset)
+    const { getLocalIdentity, createStudentIdentity } = await import("./students");
+    const local = getLocalIdentity();
+    const name = local?.displayName || "Student";
+    const res = await createStudentIdentity(name);
+    student = { 
+      studentId: res.studentId, 
+      displayName: res.displayName,
+      coinBalance: 0,
+      totalEarned: 0
+    };
+  }
+
+  const photoUrl = await uploadSubmissionPhoto(studentId, ecoMissionId, photoFile);
+  const ecoMissionRef = doc(db, "ecoMissions", ecoMissionId);
+  const ecoMissionSnap = await getDoc(ecoMissionRef);
+  if (!ecoMissionSnap.exists()) throw new Error("ECOMISSION_NOT_FOUND");
+  const ecoMission = ecoMissionSnap.data();
 
   const submissionRef = await addDoc(collection(db, COLLECTION), {
     studentId,
     studentName: student.displayName || "Student",
     studentAvatar: student.photoURL || null,
-    bountyId,
-    bountyTitle: bounty.title,
-    theme: bounty.theme,
-    sdgNumber: bounty.sdgNumber,
-    sdgLabel: bounty.sdgLabel,
+    ecoMissionId,
+    ecoMissionTitle: ecoMission.title,
+    theme: ecoMission.theme,
+    sdgNumber: ecoMission.sdgNumber,
+    sdgLabel: ecoMission.sdgLabel,
     coinsAwarded: 0,
     photoUrl,
     verdict: "pending",
@@ -141,7 +159,7 @@ export async function submitBountyProof(studentId, bountyId, photoFile) {
 
   let geminiResult;
   try {
-    geminiResult = await callGeminiVerification(photoUrl, bounty);
+    geminiResult = await callGeminiVerification(photoUrl, ecoMission);
   } catch (err) {
     const detail = err?.message || err?.details || "AI verification failed";
     await updateDoc(submissionRef, { 
@@ -161,26 +179,26 @@ export async function submitBountyProof(studentId, bountyId, photoFile) {
     reason,
     isSuspicious,
     missingElements,
-    coinsAwarded: verdict === VERDICT.APPROVED ? bounty.coinsReward : 0,
+    coinsAwarded: verdict === VERDICT.APPROVED ? ecoMission.coinsReward : 0,
     reviewedAt: new Date().toISOString(),
   });
 
   if (verdict === VERDICT.APPROVED) {
     await addDoc(collection(db, CLAIMS_COLLECTION), {
       studentId,
-      bountyId,
+      ecoMissionId,
       submissionId,
       claimedAt: new Date().toISOString(),
     });
 
-    await creditCoins(studentId, submissionId, bounty.coinsReward, {
-      type: "bounty_reward",
-      label: `Bounty: ${bounty.title}`,
-      sdgNumber: bounty.sdgNumber,
+    await creditCoins(studentId, submissionId, ecoMission.coinsReward, {
+      type: "ecoMission_reward",
+      label: `EcoMission: ${ecoMission.title}`,
+      sdgNumber: ecoMission.sdgNumber,
     });
 
-    await updateDoc(bountyRef, {
-      submissionCount: (bounty.submissionCount || 0) + 1,
+    await updateDoc(ecoMissionRef, {
+      submissionCount: (ecoMission.submissionCount || 0) + 1,
     });
   }
 
@@ -189,7 +207,7 @@ export async function submitBountyProof(studentId, bountyId, photoFile) {
     verdict,
     confidence,
     reason,
-    coinsAwarded: verdict === VERDICT.APPROVED ? bounty.coinsReward : 0,
+    coinsAwarded: verdict === VERDICT.APPROVED ? ecoMission.coinsReward : 0,
   };
 }
 
@@ -201,27 +219,27 @@ export async function adminApproveSubmission(submissionId, adminNote = "") {
   const sub = snap.data();
   if (sub.verdict !== VERDICT.FLAGGED) throw new Error("Only flagged submissions can be manually reviewed");
 
-  const bountySnap = await getDoc(doc(db, "bounties", sub.bountyId));
-  const bounty = bountySnap.data();
+  const ecoMissionSnap = await getDoc(doc(db, "ecoMissions", sub.ecoMissionId));
+  const ecoMission = ecoMissionSnap.data();
 
   await updateDoc(ref, {
     verdict: VERDICT.APPROVED,
-    coinsAwarded: bounty.coinsReward,
+    coinsAwarded: ecoMission.coinsReward,
     adminNote,
     reviewedAt: new Date().toISOString(),
   });
 
   await addDoc(collection(db, CLAIMS_COLLECTION), {
     studentId: sub.studentId,
-    bountyId: sub.bountyId,
+    ecoMissionId: sub.ecoMissionId,
     submissionId,
     claimedAt: new Date().toISOString(),
   });
 
-  await creditCoins(sub.studentId, submissionId, bounty.coinsReward, {
-    type: "bounty_reward",
-    label: `Bounty: ${bounty.title}`,
-    sdgNumber: bounty.sdgNumber,
+  await creditCoins(sub.studentId, submissionId, ecoMission.coinsReward, {
+    type: "ecoMission_reward",
+    label: `EcoMission: ${ecoMission.title}`,
+    sdgNumber: ecoMission.sdgNumber,
   });
 }
 

@@ -2,12 +2,12 @@ import { addDays, subHours } from "date-fns";
 
 const now = new Date();
 
-export const initialBounties = [
+export const initialEcoMissions = [
   {
     id: "b-1",
     title: "Bring Your Own Tumbler",
     description:
-      "Show your reusable cup at the canteen to earn coins and reduce single-use waste across campus.",
+      "Show your reusable cup at the canteen to earn Leaves and reduce single-use waste across campus.",
     instructions:
       "Photo must show a reusable tumbler with visible drink and canteen context.",
     coinReward: 50,
@@ -101,7 +101,7 @@ export const demoTransactions = [
     id: "t-1",
     type: "earned",
     amount: 25,
-    description: "Tumbler Bounty",
+    description: "Tumbler EcoMission",
     timestamp: subHours(now, 14).toISOString(),
   },
   {

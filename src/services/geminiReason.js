@@ -2,14 +2,14 @@
  * Fetches a single-sentence explanation from Gemini (when VITE_GEMINI_API_KEY is set).
  * Falls back to baseReason on missing key, network error, or CORS failure.
  */
-export async function fetchGeminiVerdictSentence({ bountyTitle, verdict, confidence, baseReason }) {
+export async function fetchGeminiVerdictSentence({ ecoMissionTitle, verdict, confidence, baseReason }) {
   const key = import.meta.env.VITE_GEMINI_API_KEY;
   if (!key || typeof key !== "string") return baseReason;
 
   const verdictLabel =
     verdict === "approved" ? "approved" : verdict === "rejected" ? "rejected" : "flagged for human review";
 
-  const prompt = `You are Verde, a campus sustainability app. In exactly ONE short sentence (max 22 words), explain to a student why their bounty photo submission was ${verdictLabel}. Confidence: ${confidence}%. Bounty: "${bountyTitle}". Internal note (do not quote verbatim): ${baseReason}. Sound friendly and specific; no quotes in your answer.`;
+  const prompt = `You are Verde, a campus sustainability app. In exactly ONE short sentence (max 22 words), explain to a student why their EcoMission photo submission was ${verdictLabel}. Confidence: ${confidence}%. EcoMission: "${ecoMissionTitle}". Internal note (do not quote verbatim): ${baseReason}. Sound friendly and specific; no quotes in your answer.`;
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
 

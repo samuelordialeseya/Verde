@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebase";
-import { subscribeToBountyFeed } from "../services/bounties";
+import { subscribeToEcoMissionFeed } from "../services/bounties";
 import { subscribeToStudent, getLocalIdentity, createStudentIdentity, subscribeToLeaderboard } from "../services/students";
 import { subscribeToTransactions, generateRedemptionToken, deductCoins, creditCoins, processRedemption, getRedemptionToken } from "../services/wallet";
-import { submitBountyProof, getStudentSubmissions } from "../services/submissions";
+import { submitEcoMissionProof, getStudentSubmissions } from "../services/submissions";
 
 const ls = {
   get(key, fallback) {
@@ -28,7 +28,7 @@ export const useAppStore = create((set, get) => ({
   displayName: "",
   coinBalance: 0,
   totalEarned: 0,
-  bounties: [],
+  ecoMissions: [],
   claims: [],
   submissions: [],
   allSubmissions: [],
@@ -42,13 +42,16 @@ export const useAppStore = create((set, get) => ({
     if (local) {
       set({ studentId: local.studentId, displayName: local.displayName });
       
-      // Auto-fetch student-specific data if ID exists
+      // Ensure the identity exists in Firestore (handle DB resets/stale sessions)
+      createStudentIdentity(local.displayName).catch(console.error);
+
+      // Auto-fetch student-specific data
       get()._subscribeToStudentData(local.studentId);
     }
 
-    // 2. Subscribe to Bounties (Universal)
-    const unsubBounties = subscribeToBountyFeed(({ bounties: list }) => {
-      set({ bounties: list || [] });
+    // 2. Subscribe to EcoMissions (Universal)
+    const unsubEcoMissions = subscribeToEcoMissionFeed(({ ecoMissions: list }) => {
+      set({ ecoMissions: list || [] });
     });
 
     // 3. Subscribe to Leaderboard (Universal)
@@ -91,7 +94,7 @@ export const useAppStore = create((set, get) => ({
     });
 
     return () => {
-      unsubBounties();
+      unsubEcoMissions();
       unsubLeaderboard();
     };
   },
@@ -169,12 +172,12 @@ export const useAppStore = create((set, get) => ({
     get()._subscribeToStudentData(res.studentId);
   },
 
-  isClaimed: (bountyId) => {
+  isClaimed: (ecoMissionId) => {
     const { submissions } = get();
-    return submissions.some((s) => s.bountyId === bountyId && s.verdict === "approved");
+    return submissions.some((s) => s.ecoMissionId === ecoMissionId && s.verdict === "approved");
   },
 
-  submitBounty: async (bountyId, fileOrName) => {
+  submitEcoMission: async (ecoMissionId, fileOrName) => {
     const { studentId } = get();
     
     // Support either real File or mock filename string
@@ -182,7 +185,7 @@ export const useAppStore = create((set, get) => ({
       ? new File(["dummy"], fileOrName, { type: "image/jpeg" }) 
       : fileOrName;
 
-    const result = await submitBountyProof(studentId, bountyId, fileToUpload);
+    const result = await submitEcoMissionProof(studentId, ecoMissionId, fileToUpload);
     
     // Refresh submissions to reflect new status
     const subs = await getStudentSubmissions(studentId);
@@ -190,7 +193,7 @@ export const useAppStore = create((set, get) => ({
 
     return {
       id: result.submissionId,
-      bountyId,
+      ecoMissionId,
       fileName: fileToUpload.name,
       verdict: result.verdict,
       reason: result.reason,
@@ -204,7 +207,7 @@ export const useAppStore = create((set, get) => ({
     if (pendingRedemption && pendingRedemption.status === "pending" && !isTokenExpired(pendingRedemption)) {
       return { error: "You already have a pending QR token." };
     }
-    if (amount < 10) return { error: "Minimum redemption is 10 coins." };
+    if (amount < 10) return { error: "Minimum redemption is 10 Leaves." };
     if (amount > coinBalance) return { error: "Insufficient balance." };
 
     try {

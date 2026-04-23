@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Papa from "papaparse";
 import { format } from "date-fns";
 import { useAppStore } from "../context/appStore";
-import { createBounty } from "../services/bounties";
+import { createEcoMission } from "../services/bounties";
 import '../styles/admin.css';
 
 export default function AdminPage() {
@@ -10,12 +10,12 @@ export default function AdminPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [adminNote, setAdminNote] = useState("");
-  const [newBountySdg, setNewBountySdg] = useState(12);
+  const [newEcoMissionSdg, setNewEcoMissionSdg] = useState(12);
   const [infoModal, setInfoModal] = useState(null);
   const [showRoadmap, setShowRoadmap] = useState(false);
 
   const { 
-    bounties, 
+    ecoMissions, 
     allSubmissions, 
     claims, 
     leaderboard, 
@@ -29,14 +29,14 @@ export default function AdminPage() {
     return () => unsub();
   }, [adminInitialize]);
 
-  const handleCreateBounty = async (e) => {
+  const handleCreateEcoMission = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const title = fd.get('title');
     const coinsReward = parseInt(fd.get('coins'), 10);
     const theme = fd.get('type');
     const description = fd.get('description');
-    const sdgNumber = newBountySdg;
+    const sdgNumber = newEcoMissionSdg;
     const sdgLabel = sdgNumber === 11 ? "Sustainable Cities" : sdgNumber === 12 ? "Responsible Consumption" : "Climate Action";
     
     if (!title || !coinsReward || !description) {
@@ -46,7 +46,7 @@ export default function AdminPage() {
 
     try {
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-      await createBounty({
+      await createEcoMission({
         title,
         description,
         instructions: description,
@@ -57,12 +57,12 @@ export default function AdminPage() {
         expiresAt,
         aiVerificationHint: `Ensure the photo shows ${description}`
       });
-      alert("Bounty created successfully!");
+      alert("EcoMission created successfully!");
       setIsModalOpen(false);
       e.target.reset();
     } catch (err) {
       console.error(err);
-      alert("Failed to create bounty");
+      alert("Failed to create EcoMission");
     }
   };
 
@@ -71,12 +71,13 @@ export default function AdminPage() {
       id: s.id,
       studentId: s.studentId,
       studentName: s.studentName,
-      bountyTitle: s.bountyTitle,
+      ecoMissionTitle: s.ecoMissionTitle,
       theme: s.theme,
       sdg: s.sdgNumber,
       verdict: s.verdict,
       confidence: s.confidence,
       submittedAt: s.submittedAt,
+      photoEvidence: s.photoURL || "No Photo"
     })));
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a");
@@ -125,12 +126,12 @@ export default function AdminPage() {
       <div className="app">
         <aside className="sidebar" aria-label="Primary">
           <div className="sidebar-brand-block">
-            <div className="brand-row">
-              <div className="brand-logo" aria-hidden="true">
-                <img className="brand-logo-leaf" src="/assets/brand-leaf.svg" width="30" height="30" alt="" />
+            <div className="brand-row" style={{ gap: '6px' }}>
+              <div className="brand-logo" aria-hidden="true" style={{ background: 'transparent' }}>
+                <img src="/assets/verde-logo.png" alt="Verde Logo" className="h-9 w-9 object-contain" />
               </div>
               <div className="brand-text-col">
-                <p className="brand-title">Verde Admin</p>
+                <p className="brand-title" style={{ color: '#008b4e', fontWeight: 600 }}>Verde Admin</p>
                 <p className="brand-sub">Digital Sustainability Hub</p>
               </div>
             </div>
@@ -180,15 +181,15 @@ export default function AdminPage() {
                   <div>
                     <h1 className="title-dash-platform">Platform Overview</h1>
                   </div>
-                  <button type="button" className="btn-new-bounty" onClick={() => setIsModalOpen(true)}>
+                  <button type="button" className="btn-new-ecoMission" onClick={() => setIsModalOpen(true)}>
                     <img src="/assets/icon-plus.svg" width="20" height="20" alt="" />
-                    NEW BOUNTY
+                    NEW ECOMISSION
                   </button>
                 </div>
 
                 <div className="stat-grid">
                   <article className="stat-card">
-                    <div className="stat-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 20C8.61667 20 7.31667 19.7375 6.1 19.2125C4.88333 18.6875 3.825 17.975 2.925 17.075C2.025 16.175 1.3125 15.1167 0.7875 13.9C0.2625 12.6833 0 11.3833 0 10C0 8.61667 0.2625 7.31667 0.7875 6.1C1.3125 4.88333 2.025 3.825 2.925 2.925C3.825 2.025 4.88333 1.3125 6.1 0.7875C7.31667 0.2625 8.61667 0 10 0C11.0833 0 12.1083 0.158333 13.075 0.475C14.0417 0.791667 14.9333 1.23333 15.75 1.8L14.3 3.275C13.6667 2.875 12.9917 2.5625 12.275 2.3375C11.5583 2.1125 10.8 2 10 2C7.78333 2 5.89583 2.77917 4.3375 4.3375C2.77917 5.89583 2 7.78333 2 10C2 12.2167 2.77917 14.1042 4.3375 15.6625C5.89583 17.2208 7.78333 18 10 18C12.2167 18 14.1042 17.2208 15.6625 15.6625C17.2208 14.1042 18 12.2167 18 10C18 9.7 17.9833 9.4 17.95 9.1C17.9167 8.8 17.8667 8.50833 17.8 8.225L19.425 6.6C19.6083 7.13333 19.75 7.68333 19.85 8.25C19.95 8.81667 20 9.4 20 10C20 11.3833 19.7375 12.6833 19.2125 13.9C18.6875 15.1167 17.975 16.175 17.075 17.075C16.175 17.975 15.1167 18.6875 13.9 19.2125C12.6833 19.7375 11.3833 20 10 20ZM8.6 14.6L4.35 10.35L5.75 8.95L8.6 11.8L18.6 1.775L20 3.175L8.6 14.6Z" fill="#0F5238"/></svg></div>
+                    <div className="stat-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 20C8.61667 20 7.31667 19.7375 6.1 19.2125C4.88333 18.6875 3.825 17.975 2.925 17.075C2.025 16.175 1.3125 15.1167 0.7875 13.9C0.2625 12.6833 0 11.3833 0 10C0 8.61667 0.2625 7.31667 0.7875 6.1C1.3125 4.88333 2.025 3.825 2.925 2.925C3.825 2.025 4.88333 1.3125 6.1 0.7875C7.31667 0.2625 8.61667 0 10 0C11.0833 0 12.1083 0.158333 13.075 0.475C14.0417 0.791667 14.9333 1.23333 15.75 1.8L14.3 3.275C13.6667 2.875 12.9917 2.5625 12.275 2.3375C11.5583 2.1125 10.8 2 10 2C7.78333 2 5.89583 2.77917 4.3375 4.3375C2.77917 5.89583 2 7.78333 2 10C2 12.2167 2.77917 14.1042 4.3375 15.6625C5.89583 17.2208 7.78333 18 10 18C12.2167 18 14.1042 17.2208 15.6625 15.6625C17.2208 14.1042 18 12.2167 18 10C18 9.7 17.9833 9.4 17.95 9.1C17.9167 8.8 17.8667 8.50833 17.8 8.225L19.425 6.6C19.6083 7.13333 19.75 7.68333 19.85 8.25C19.95 8.81667 20 9.4 20 10C20 11.3833 19.7375 12.6833 19.2125 13.9C18.6875 15.1167 17.975 16.175 17.075 17.075C16.175 17.975 15.1167 18.6875 13.9 19.2125C12.6833 19.7375 11.3833 20 10 20ZM8.6 14.6L4.35 10.35L5.75 8.95L8.6 11.8L18.6 1.775L20 3.175L8.6 14.6Z" fill="#008b4e"/></svg></div>
                     <div className="delta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg> +12%</div>
                     <div className="label">Verified actions today</div>
                     <div className="value">{totalApproved.toLocaleString()}</div>
@@ -196,11 +197,11 @@ export default function AdminPage() {
                   <article className="stat-card">
                     <div className="stat-icon"><svg width="18" height="20" viewBox="0 0 18 20" fill="none"><path d="M6.1 7.25L1.05 4.425L9 0L16.95 4.425L11.9 7.25C11.5167 6.85 11.075 6.54167 10.575 6.325C10.075 6.10833 9.55 6 9 6C8.45 6 7.925 6.10833 7.425 6.325C6.925 6.54167 6.48333 6.85 6.1 7.25ZM8 19.45L0 15V6.125L5.125 9C5.075 9.16667 5.04167 9.32917 5.025 9.4875C5.00833 9.64583 5 9.81667 5 10C5 10.9167 5.275 11.7333 5.825 12.45C6.375 13.1667 7.1 13.6417 8 13.875V19.45ZM9 12C8.45 12 7.97917 11.8042 7.5875 11.4125C7.19583 11.0208 7 10.55 7 10C7 9.45 7.19583 8.97917 7.5875 8.5875C7.97917 8.19583 8.45 8 9 8C9.55 8 10.0208 8.19583 10.4125 8.5875C10.8042 8.97917 11 9.45 11 10C11 10.55 10.8042 11.0208 10.4125 11.4125C10.0208 11.8042 9.55 12 9 12ZM10 19.45V13.875C10.9 13.6417 11.625 13.1667 12.175 12.45C12.725 11.7333 13 10.9167 13 10C13 9.81667 12.9917 9.64583 12.975 9.4875C12.9583 9.32917 12.925 9.16667 12.875 9L18 6.125V15L10 19.45Z" fill="#384C43"/></svg></div>
                     <div className="delta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg> +5.4%</div>
-                    <div className="label">Total coins awarded today</div>
+                    <div className="label">Total Leaves awarded today</div>
                     <div className="value">{totalCoinsAwarded.toLocaleString()}</div>
                   </article>
                   <article className="stat-card">
-                    <div className="stat-icon"><svg width="22" height="16" viewBox="0 0 22 16" fill="none"><path d="M0 16V13.2C0 12.6333 0.145833 12.1125 0.4375 11.6375C0.729167 11.1625 1.11667 10.8 1.6 10.55C2.63333 10.0333 3.68333 9.64583 4.75 9.3875C5.81667 9.12917 6.9 9 8 9C9.1 9 10.1833 9.12917 11.25 9.3875C12.3167 9.64583 13.3667 10.0333 14.4 10.55C14.8833 10.8 15.2708 11.1625 15.5625 11.6375C15.8542 12.1125 16 12.6333 16 13.2V16H0ZM18 16V13C18 12.2667 17.7958 11.5625 17.3875 10.8875C16.9792 10.2125 16.4 9.63333 15.65 9.15C16.5 9.25 17.3 9.42083 18.05 9.6625C18.8 9.90417 19.5 10.2 20.15 10.55C20.75 10.8833 21.2083 11.2542 21.525 11.6625C21.8417 12.0708 22 12.5167 22 13V16H18ZM8 8C6.9 8 5.95833 7.60833 5.175 6.825C4.39167 6.04167 4 5.1 4 4C4 2.9 4.39167 1.95833 5.175 1.175C5.95833 0.391667 6.9 0 8 0C9.1 0 10.0417 0.391667 10.825 1.175C11.6083 1.95833 12 2.9 12 4C12 5.1 11.6083 6.04167 10.825 6.825C10.0417 7.60833 9.1 8 8 8ZM18 4C18 5.1 17.6083 6.04167 16.825 6.825C16.0417 7.60833 15.1 8 14 8C13.8167 8 13.5833 7.97917 13.3 7.9375C13.0167 7.89583 12.7833 7.85 12.6 7.8C13.05 7.26667 13.3958 6.675 13.6375 6.025C13.8792 5.375 14 4.7 14 4C14 3.3 13.8792 2.625 13.6375 1.975C13.3958 1.325 13.05 0.733333 12.6 0.2C12.8333 0.116667 13.0667 0.0625 13.3 0.0375C13.5333 0.0125 13.7667 0 14 0C15.1 0 16.0417 0.391667 16.825 1.175C17.6083 1.95833 18 2.9 18 4Z" fill="#006C48"/></svg></div>
+                    <div className="stat-icon"><svg width="22" height="16" viewBox="0 0 22 16" fill="none"><path d="M0 16V13.2C0 12.6333 0.145833 12.1125 0.4375 11.6375C0.729167 11.1625 1.11667 10.8 1.6 10.55C2.63333 10.0333 3.68333 9.64583 4.75 9.3875C5.81667 9.12917 6.9 9 8 9C9.1 9 10.1833 9.12917 11.25 9.3875C12.3167 9.64583 13.3667 10.0333 14.4 10.55C14.8833 10.8 15.2708 11.1625 15.5625 11.6375C15.8542 12.1125 16 12.6333 16 13.2V16H0ZM18 16V13C18 12.2667 17.7958 11.5625 17.3875 10.8875C16.9792 10.2125 16.4 9.63333 15.65 9.15C16.5 9.25 17.3 9.42083 18.05 9.6625C18.8 9.90417 19.5 10.2 20.15 10.55C20.75 10.8833 21.2083 11.2542 21.525 11.6625C21.8417 12.0708 22 12.5167 22 13V16H18ZM8 8C6.9 8 5.95833 7.60833 5.175 6.825C4.39167 6.04167 4 5.1 4 4C4 2.9 4.39167 1.95833 5.175 1.175C5.95833 0.391667 6.9 0 8 0C9.1 0 10.0417 0.391667 10.825 1.175C11.6083 1.95833 12 2.9 12 4C12 5.1 11.6083 6.04167 10.825 6.825C10.0417 7.60833 9.1 8 8 8ZM18 4C18 5.1 17.6083 6.04167 16.825 6.825C16.0417 7.60833 15.1 8 14 8C13.8167 8 13.5833 7.97917 13.3 7.9375C13.0167 7.89583 12.7833 7.85 12.6 7.8C13.05 7.26667 13.3958 6.675 13.6375 6.025C13.8792 5.375 14 4.7 14 4C14 3.3 13.8792 2.625 13.6375 1.975C13.3958 1.325 13.05 0.733333 12.6 0.2C12.8333 0.116667 13.0667 0.0625 13.3 0.0375C13.5333 0.0125 13.7667 0 14 0C15.1 0 16.0417 0.391667 16.825 1.175C17.6083 1.95833 18 2.9 18 4Z" fill="#008b4e"/></svg></div>
                     <div className="delta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg> +28%</div>
                     <div className="label">Active students today</div>
                     <div className="value">{activeStudentsCount.toLocaleString()}</div>
@@ -219,7 +220,7 @@ export default function AdminPage() {
                       <div className="feed-rows">
                         {allSubmissions.slice(0, 20).map((sub) => (
                           <div key={sub.id} className="feed-row">
-                            <div className="feed-avatar-wrap">
+                            <div className="feed-avatar-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               {sub.studentAvatar ? (
                                 <img src={sub.studentAvatar} width="48" height="48" alt="" className="feed-avatar" />
                               ) : (
@@ -227,19 +228,19 @@ export default function AdminPage() {
                                   {sub.studentName?.charAt(0) || "S"}
                                 </div>
                               )}
-                              <div className={`feed-badge ${sub.verdict === "approved" ? "emerald" : "teal"}`}>
+                              <div className={`feed-badge ${sub.verdict === "approved" ? "emerald" : "teal"}`} style={{ right: -2, bottom: -2 }}>
                                 <img src="/assets/Icon-20.svg" width="10" height="10" alt="" className="ic-white" />
                               </div>
                             </div>
                             <div className="feed-body">
                               <div className="feed-line1">
-                                <p className="msg"><strong>{sub.studentName || "Student"}</strong> {sub.verdict === "approved" ? "verified" : "submitted proof for"} <strong>{sub.bountyTitle}</strong></p>
+                                <p className="msg"><strong>{sub.studentName || "Student"}</strong> {sub.verdict === "approved" ? "verified" : "submitted proof for"} <strong>{sub.ecoMissionTitle}</strong></p>
                                 <span className="feed-time">2M AGO</span>
                               </div>
                               <div className="feed-line2">
                                 <div className={`feed-coins ${sub.verdict === "flagged" ? "pending" : ""}`}>
                                   <img src={`/assets/Icon-${sub.verdict === "approved" ? "25" : "26"}.svg`} width="15" height="15" alt="" />
-                                  {sub.verdict === "approved" ? `+${sub.coinsAwarded || 0} Coins` : sub.verdict === "flagged" ? "Under Review" : "Rejected"}
+                                  {sub.verdict === "approved" ? `+${sub.coinsAwarded || 0} Leaves` : sub.verdict === "flagged" ? "Under Review" : "Rejected"}
                                 </div>
                                 <span className="feed-tag">SDG {sub.sdgNumber || "12"}: {sub.sdgNumber === 11 ? "Cities" : sub.sdgNumber === 12 ? "Consumption" : "Climate"}</span>
                               </div>
@@ -254,17 +255,17 @@ export default function AdminPage() {
                   <div className="dash-col-right">
                     <div className="sdg-card-v2">
                       <div className="sdg-card-v2-hd">
-                        <span>Ongoing Bounties Participation</span>
+                        <span>Ongoing EcoMissions Participation</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#404040" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
                       </div>
-                      {bounties.filter(b => b.isActive).sort((a, b) => (b.claimCount || 0) - (a.claimCount || 0)).slice(0, 8).map((bounty, idx) => {
-                        const count = bounty.claimCount || 0;
-                        const max = Math.max(1, Math.max(...bounties.map(b => b.claimCount || 0)));
+                      {ecoMissions.filter(b => b.isActive).sort((a, b) => (b.claimCount || 0) - (a.claimCount || 0)).slice(0, 8).map((ecoMission, idx) => {
+                        const count = ecoMission.claimCount || 0;
+                        const max = Math.max(1, Math.max(...ecoMissions.map(b => b.claimCount || 0)));
                         const pct = Math.round((count / max) * 100);
                         return (
-                          <div key={bounty.id} className="sdg-bar-block">
-                            <div className="sdg-bar-labels">
-                              <div className="name">{idx + 1}. {bounty.title}</div>
+                          <div key={ecoMission.id} className="sdg-bar-block">
+                            <div className="bar-info">
+                              <div className="name">{idx + 1}. {ecoMission.title}</div>
                               <div className="ct">{count} students</div>
                             </div>
                             <div className="sdg-track"><span style={{ width: `${Math.max(5, pct)}%`, background: 'var(--teal-800)' }}></span></div>
@@ -318,7 +319,7 @@ export default function AdminPage() {
                   </div>
                   <div className="table-header-grid">
                     <div className="col-student">Student details</div>
-                    <div className="col-bounty">Bounty initiative</div>
+                    <div className="col-ecoMission">EcoMission initiative</div>
                     <div className="col-actions">Actions</div>
                   </div>
                   <div className="table-scroll-wrap" style={{ maxHeight: '400px', overflowY: 'auto' }}>
@@ -344,10 +345,10 @@ export default function AdminPage() {
                                 </div>
                               </div>
                             </td>
-                            <td className="td-bounty">
-                              <div className="bounty-link-cell">
+                            <td className="td-ecoMission">
+                              <div className="ecoMission-link-cell">
                                 <img src="/assets/Icon-20.svg" width="12" height="12" alt="" />
-                                <span className="bounty-nm">{sub.bountyTitle}</span>
+                                <span className="ecoMission-nm">{sub.ecoMissionTitle || sub.bountyTitle || sub.title || "EcoMission"}</span>
                               </div>
                             </td>
                             <td className="td-actions">
@@ -420,7 +421,7 @@ export default function AdminPage() {
               <section className="panel is-visible">
                 <div className="lb-head-row">
                   <div>
-                    <h1>Eco-Leaderboard</h1>
+                    <h1 className="title-dash-platform">Eco-Leaderboard</h1>
                   </div>
                   <div className="lb-seg">
                     <button type="button" className="is-on">Weekly</button>
@@ -439,7 +440,7 @@ export default function AdminPage() {
                       <div className="rank-dot stone">2</div>
                       <h3>{leaderboard[1].displayName}</h3>
                       <div className="coins-big">{leaderboard[1].points?.toLocaleString()}</div>
-                      <div className="coins-sub">VERDE COINS</div>
+                      <div className="coins-sub">LEAVES</div>
                     </div>
                   )}
 
@@ -451,7 +452,7 @@ export default function AdminPage() {
                       <div className="rank-dot">1</div>
                       <h3>{leaderboard[0].displayName}</h3>
                       <div className="coins-big">{leaderboard[0].points?.toLocaleString()}</div>
-                      <div className="coins-sub">VERDE COINS</div>
+                      <div className="coins-sub">LEAVES</div>
                     </div>
                   )}
 
@@ -463,13 +464,13 @@ export default function AdminPage() {
                       <div className="rank-dot amber">3</div>
                       <h3>{leaderboard[2].displayName}</h3>
                       <div className="coins-big">{leaderboard[2].points?.toLocaleString()}</div>
-                      <div className="coins-sub">VERDE COINS</div>
+                      <div className="coins-sub">LEAVES</div>
                     </div>
                   )}
                 </div>
 
                 <div className="lb-rank-header">
-                  <h2>Campus Ranking</h2>
+                  <h2 className="title-dash-platform" style={{ fontSize: '28px' }}>Campus Ranking</h2>
                   <span className="lb-meta">SHOWING TOP 100 STUDENTS</span>
                 </div>
 
@@ -478,7 +479,7 @@ export default function AdminPage() {
                     <div>Rank</div>
                     <div>Contributor</div>
                     <div>Total actions</div>
-                    <div>Verde coins</div>
+                    <div>Leaves</div>
                     <div>Progress</div>
                   </div>
                   <div className="rank-table-bd">
@@ -681,21 +682,21 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* New Bounty Modal */}
+      {/* New EcoMission Modal */}
       {isModalOpen && (
         <div className="modal-overlay is-open" onClick={() => setIsModalOpen(false)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px' }}>
             <div className="modal-hd">
               <div>
-                <h3>Create New Bounty</h3>
+                <h3>Create New EcoMission</h3>
                 <p>Design a sustainable challenge for the community.</p>
               </div>
               <button type="button" className="modal-x" onClick={() => setIsModalOpen(false)}>&times;</button>
             </div>
-            <form className="modal-bd" onSubmit={handleCreateBounty}>
+            <form className="modal-bd" onSubmit={handleCreateEcoMission}>
               <div className="nb-grid">
                 <div className="field">
-                  <label>Bounty title</label>
+                  <label>EcoMission title</label>
                   <div className="control">
                     <input name="title" type="text" placeholder="e.g., Campus Cleanup Sprint" required />
                   </div>
@@ -732,8 +733,8 @@ export default function AdminPage() {
                     <button 
                       key={num} 
                       type="button" 
-                      className={`date-card ${newBountySdg === num ? "is-on" : ""}`} 
-                      onClick={() => setNewBountySdg(num)}
+                      className={`date-card ${newEcoMissionSdg === num ? "is-on" : ""}`} 
+                      onClick={() => setNewEcoMissionSdg(num)}
                     >
                       <div className="day">{num}</div>
                       <div className="meta">
@@ -746,7 +747,7 @@ export default function AdminPage() {
               </div>
               <div className="modal-ft">
                 <button type="button" className="btn-modal btn-cancel" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                <button type="submit" className="btn-modal btn-create">Create Bounty</button>
+                <button type="submit" className="btn-modal btn-create">Create EcoMission</button>
               </div>
             </form>
           </div>
@@ -760,7 +761,7 @@ export default function AdminPage() {
             <div className="modal-hd">
               <div>
                 <h3>Review Submission</h3>
-                <p>{selectedSubmission.studentName} - {selectedSubmission.bountyTitle}</p>
+                <p>{selectedSubmission.studentName} - {selectedSubmission.ecoMissionTitle}</p>
               </div>
               <button type="button" className="modal-x" onClick={() => setSelectedSubmission(null)}>&times;</button>
             </div>
@@ -887,6 +888,20 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+      <style>{`
+        :root {
+          --verde: #008b4e !important;
+          --platform-title: #008b4e !important;
+          --verde-dark: #006C48 !important;
+        }
+        .brand-title { color: #008b4e !important; }
+        .stat-icon svg path { fill: #008b4e !important; }
+        h1 { color: #008b4e !important; font-size: 42px !important; font-weight: 800 !important; letter-spacing: -0.03em !important; margin-bottom: 12px !important; }
+        h2 { color: #008b4e !important; font-size: 32px !important; font-weight: 700 !important; letter-spacing: -0.02em !important; }
+        .dash-feed-title h2 { font-size: 20px !important; }
+        .ecoMission-nm { color: #1d242b !important; display: inline-block !important; margin-left: 8px !important; font-size: 13px !important; font-weight: 500 !important; white-space: nowrap !important; }
+        .ecoMission-link-cell { display: flex !important; align-items: center !important; background: #f8fafc !important; padding: 6px 12px !important; rounded: 12px !important; border: 1px solid #e2e8f0 !important; width: fit-content !important; }
+      `}</style>
     </>
   );
 }

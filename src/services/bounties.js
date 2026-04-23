@@ -12,7 +12,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
-const COLLECTION = "bounties";
+const COLLECTION = "ecoMissions";
 
 export const THEMES = ["canteen", "energy", "waste", "general"];
 export const SDGS = [
@@ -37,12 +37,12 @@ function normalizeExpiresAt(expiresAt) {
   return parsed.toISOString();
 }
 
-function mapBounty(docSnap) {
+function mapEcoMission(docSnap) {
   const data = docSnap.data();
   return { id: docSnap.id, ...data };
 }
 
-export async function createBounty({
+export async function createEcoMission({
   title,
   description,
   instructions = "",
@@ -78,27 +78,27 @@ export async function createBounty({
   return ref.id;
 }
 
-export async function updateBounty(bountyId, updates) {
-  const ref = doc(db, COLLECTION, bountyId);
+export async function updateEcoMission(ecoMissionId, updates) {
+  const ref = doc(db, COLLECTION, ecoMissionId);
   await updateDoc(ref, {
     ...updates,
     updatedAt: new Date().toISOString(),
   });
 }
 
-export async function toggleBountyActive(bountyId, isActive) {
-  const ref = doc(db, COLLECTION, bountyId);
+export async function toggleEcoMissionActive(ecoMissionId, isActive) {
+  const ref = doc(db, COLLECTION, ecoMissionId);
   await updateDoc(ref, { isActive });
 }
 
-export async function getBounty(bountyId) {
-  const ref = doc(db, COLLECTION, bountyId);
+export async function getEcoMission(ecoMissionId) {
+  const ref = doc(db, COLLECTION, ecoMissionId);
   const snap = await getDoc(ref);
-  if (!snap.exists()) throw new Error("Bounty not found");
-  return mapBounty(snap);
+  if (!snap.exists()) throw new Error("EcoMission not found");
+  return mapEcoMission(snap);
 }
 
-export async function getActiveBounties() {
+export async function getActiveEcoMissions() {
   // No orderBy to avoid requiring a composite index in Firestore
   const q = query(
     collection(db, COLLECTION),
@@ -107,12 +107,12 @@ export async function getActiveBounties() {
   const snap = await getDocs(q);
   const now = Date.now();
   return snap.docs
-    .map(mapBounty)
-    .filter((bounty) => new Date(bounty.expiresAt).getTime() > now)
+    .map(mapEcoMission)
+    .filter((ecoMission) => new Date(ecoMission.expiresAt).getTime() > now)
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
-export function subscribeToBountyFeed(callback) {
+export function subscribeToEcoMissionFeed(callback) {
   // No orderBy to avoid requiring a composite index — sort client-side instead
   const q = query(
     collection(db, COLLECTION),
@@ -121,33 +121,33 @@ export function subscribeToBountyFeed(callback) {
 
   return onSnapshot(q, (snap) => {
     const now = Date.now();
-    const bounties = snap.docs
-      .map(mapBounty)
+    const ecoMissions = snap.docs
+      .map(mapEcoMission)
       .filter((b) => new Date(b.expiresAt).getTime() > now)
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    const grouped = bounties.reduce((acc, bounty) => {
-      if (!acc[bounty.theme]) acc[bounty.theme] = [];
-      acc[bounty.theme].push(bounty);
+    const grouped = ecoMissions.reduce((acc, ecoMission) => {
+      if (!acc[ecoMission.theme]) acc[ecoMission.theme] = [];
+      acc[ecoMission.theme].push(ecoMission);
       return acc;
     }, {});
 
-    callback({ bounties, grouped });
+    callback({ ecoMissions, grouped });
   });
 }
 
-export function subscribeToAllBounties(callback) {
+export function subscribeToAllEcoMissions(callback) {
   const q = query(
     collection(db, COLLECTION),
     orderBy("createdAt", "desc")
   );
   return onSnapshot(q, (snap) => {
-    callback(snap.docs.map(mapBounty));
+    callback(snap.docs.map(mapEcoMission));
   });
 }
 
-export function isBountyExpired(bounty) {
-  return new Date(bounty.expiresAt) < new Date();
+export function isEcoMissionExpired(ecoMission) {
+  return new Date(ecoMission.expiresAt) < new Date();
 }
 
 export function getTimeRemaining(expiresAt) {

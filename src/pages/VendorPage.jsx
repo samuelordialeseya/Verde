@@ -5,13 +5,9 @@ import { format } from "date-fns";
 import { useAppStore } from "../context/appStore";
 import PhoneFrame from "../components/PhoneFrame";
 
-function IconMenu() {
+function IconVerdeLogo() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00A15E" strokeWidth="2" strokeLinecap="round" aria-hidden>
-      <line x1="4" x2="20" y1="6" y2="6" />
-      <line x1="4" x2="20" y1="12" y2="12" />
-      <line x1="4" x2="20" y1="18" y2="18" />
-    </svg>
+    <img src="/assets/verde-logo.png" alt="Verde Logo" className="h-8 w-8 shrink-0 object-contain" />
   );
 }
 
@@ -27,9 +23,9 @@ function IconGear() {
 function TopNav() {
   return (
     <header className="sticky top-0 z-50 flex shrink-0 items-center justify-between border-b border-[#e6e9eb] bg-[#f8faf9] px-3.5 py-3">
-      <div className="flex items-center gap-2">
-        <IconMenu />
-        <span className="text-[18px] font-semibold text-[#00A15E]">Verde</span>
+      <div className="flex items-center gap-[0.1rem]">
+        <IconVerdeLogo />
+        <span className="mt-[9px] text-[18px] font-semibold tracking-tight text-[#008b4e]">Verde</span>
       </div>
     </header>
   );
@@ -192,13 +188,13 @@ export default function VendorPage() {
   const videoRef = useRef(null);
   const codeReaderRef = useRef(null);
 
-  const vendorName = id === "1" ? "Main Canteen" : id === "2" ? "Print Shop" : `Vendor ${id}`;
+  const vendorName = id === "1" ? "Shawana Rice" : id === "2" ? "Print Shop" : `Vendor ${id}`;
 
   const handleScan = async (tokenText) => {
     // Extract rdm- ID if it's embedded in a string, otherwise use raw text
     const rdmMatch = tokenText.match(/rdm-[a-z0-9]+/i);
     const parsedToken = rdmMatch ? rdmMatch[0] : tokenText.trim();
-    
+
     console.log("Scanned Token:", parsedToken);
     try {
       const res = await consumeRedemptionToken(parsedToken, vendorName);
@@ -351,7 +347,7 @@ export default function VendorPage() {
           <div className="mt-14 text-center">
             <p className="text-[9px] font-semibold tracking-[0.18em] text-[#4d7e68] uppercase">Action Completed</p>
             <h1 className="mt-2 text-[20px] leading-[0.95] font-semibold tracking-[-0.02em] text-[#151a1f]">Redemption<br />Successful</h1>
-            <p className="mt-3 text-[14px] leading-5 text-[#5e666f]">Successfully processed <span className="font-semibold text-[#0a7e49]">{token?.amount || 50} coins</span><br />for this transaction.</p>
+            <p className="mt-3 text-[14px] leading-5 text-[#5e666f]">Successfully processed <span className="font-semibold text-[#0a7e49]">{token?.amount || 50} Leaves</span><br />for this transaction.</p>
           </div>
 
           <article className="mt-7 flex overflow-hidden rounded-[20px] bg-[#f1f3f4] shadow-sm">
@@ -361,7 +357,7 @@ export default function VendorPage() {
                 <p className="text-[8px] font-semibold tracking-[0.14em] text-[#6f7780] uppercase">Redemption Details</p>
                 <IconTicket />
               </div>
-              <p className="mt-1 text-[31px] leading-none font-semibold tracking-[-0.02em] text-[#1d242b]">₱{discountPeso} Discount Applied</p>
+              <p className="mt-1 text-[31px] leading-none font-semibold tracking-[-0.02em] text-[#1d242b]">10% Discount Applied</p>
               <p className="mt-2 text-[11px] leading-4 text-[#606972]">Student: {token?.displayName || "Julian Rivers"} ({token?.studentId || "VER-2023-8821"}).<br />Valid for all storewide items.</p>
             </div>
           </article>
@@ -459,11 +455,6 @@ export default function VendorPage() {
         </div>
 
         <h1 className="text-[28px] leading-[1.05] font-bold tracking-[-0.02em] text-[#151a1f]">{vendorName}</h1>
-        <p className="mt-0.5 flex items-center gap-1.5 text-[25px] leading-[1.05] font-semibold tracking-[-0.02em]">
-          <span className="font-bold text-[#00A15E]">Verde</span>
-          <span className="font-semibold text-[#2b333b]">Partner</span>
-        </p>
-        <p className="mt-3 text-[13px] leading-6 text-[#5e666f]">Verify sustainability credentials and reward students in real-time.</p>
 
         <section className="relative mt-7 h-[145px] overflow-hidden rounded-[24px] border border-[#e8ebee] bg-[#8e8f84]">
           {viewState === "scan" ? (
@@ -486,7 +477,7 @@ export default function VendorPage() {
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-800 text-white p-4 text-center">
               <IconScanQr />
-              <button 
+              <button
                 onClick={() => setViewState("scan")}
                 className="mt-3 rounded-full bg-[#00A15E] px-6 py-2 text-[12px] font-bold"
               >
@@ -522,9 +513,8 @@ export default function VendorPage() {
             <button
               type="button"
               onClick={() => startScanner(selectedCameraId)}
-              className={`absolute right-3 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold tracking-[0.08em] text-[#0a7e49] uppercase ${
-                availableCameras.length ? "top-11" : "top-3"
-              }`}
+              className={`absolute right-3 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold tracking-[0.08em] text-[#0a7e49] uppercase ${availableCameras.length ? "top-11" : "top-3"
+                }`}
             >
               Retry Camera
             </button>
@@ -534,35 +524,20 @@ export default function VendorPage() {
         <article className="mt-7 flex overflow-hidden rounded-[24px] border border-[#eef1f4] bg-white shadow-sm">
           <div className="w-[6px] shrink-0 bg-[#0a6b42]" aria-hidden />
           <div className="min-w-0 flex-1 p-3.5">
-            <p className="text-[8px] font-semibold tracking-[0.16em] text-[#6f7780] uppercase">Today's Impact</p>
-            <div className="mt-2 flex items-end gap-1">
-              <span className="text-[40px] leading-none font-semibold tracking-[-0.03em] text-[#0a7e49]">124</span>
-              <span className="pb-1.5 text-[12px] text-[#4f5962]">Scans</span>
-            </div>
-            <div className="mt-2 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="grid h-10 w-10 place-items-center rounded-full bg-[#e8edf0]">
-                    <IconLeaf className="text-[#5c6570]" />
-                  </span>
-                  <div>
-                    <p className="text-[14px] font-semibold text-[#1b222a]">Reusable Bottle</p>
-                    <p className="text-[9px] tracking-[0.09em] text-[#98a2aa] uppercase">3 mins ago</p>
-                  </div>
+            <div className="mt-1 grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-[7px] font-semibold tracking-[0.12em] text-[#6f7780] uppercase">Total Scans</p>
+                <div className="mt-1 flex items-baseline gap-1">
+                  <span className="text-[26px] font-semibold tracking-[-0.02em] text-[#0a7e49]">124</span>
+                  <span className="text-[10px] text-[#4f5962]">Scans</span>
                 </div>
-                <p className="text-[16px] leading-none font-semibold text-[#0a7e49]">+5pts</p>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="grid h-10 w-10 place-items-center rounded-full bg-[#e8edf0]">
-                    <IconUtensils />
-                  </span>
-                  <div>
-                    <p className="text-[14px] font-semibold text-[#1b222a]">Meat-free Meal</p>
-                    <p className="text-[9px] tracking-[0.09em] text-[#98a2aa] uppercase">12 mins ago</p>
-                  </div>
+              <div>
+                <p className="text-[7px] font-semibold tracking-[0.12em] text-[#6f7780] uppercase">Leaves Received</p>
+                <div className="mt-1 flex items-baseline gap-1">
+                  <span className="text-[26px] font-semibold tracking-[-0.02em] text-[#0a7e49]">12.4k</span>
+                  <span className="text-[10px] text-[#4f5962]">Leaves</span>
                 </div>
-                <p className="text-[16px] leading-none font-semibold text-[#0a7e49]">+12pts</p>
               </div>
             </div>
           </div>

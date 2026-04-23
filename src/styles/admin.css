@@ -270,7 +270,7 @@
       object-fit: cover;
       box-shadow: 0 0 0 2px rgba(45, 106, 79, 0.2);
     }
-    .btn-new-bounty {
+    .btn-new-ecoMission {
       display: inline-flex;
       align-items: center;
       gap: 12px;
@@ -287,10 +287,10 @@
       box-shadow:        0 4px 6px -4px rgba(0, 0, 0, 0.1),        0 10px 15px -3px rgba(0, 0, 0, 0.1);
       flex-shrink: 0;
     }
-    .btn-new-bounty:hover {
+    .btn-new-ecoMission:hover {
       filter: brightness(1.05);
     }
-    .btn-new-bounty img {
+    .btn-new-ecoMission img {
       width: 20px;
       height: 20px;
       flex-shrink: 0;
@@ -486,7 +486,7 @@
  border-radius: 1px;
  }
     .feed-badge.lime {
- background: var(--green-300);
+ background: #22c55e;
  }
     .feed-badge.lime .mini {
  width: 8px;
@@ -1827,7 +1827,7 @@
     .gm-v2-cta:hover {
       filter: brightness(0.98);
     }
-    /* New Bounty Modal (Figma merge) */    body.is-modal-open {
+    /* New EcoMission Modal (Figma merge) */    body.is-modal-open {
       overflow: hidden;
     }
     .modal-overlay {
@@ -2258,7 +2258,7 @@
     .td-student {
  padding: 20px 32px;
  }
-    .td-bounty {
+    .td-ecoMission {
  padding: 20px 0;
  }
     .td-actions {
@@ -2269,7 +2269,7 @@
       border-radius: 50%;
       object-fit: cover;
     }
-    .bounty-link-cell {
+    .ecoMission-link-cell {
       display: inline-flex;
       align-items: center;
       gap: 10px;
@@ -2281,7 +2281,7 @@
       font-size: 0.875rem;
       cursor: pointer;
     }
-    .bounty-link-cell:hover {
+    .ecoMission-link-cell:hover {
       background: rgba(17, 94, 89, 0.1);
     }
     .btn-review {
@@ -3327,8 +3327,20 @@
  letter-spacing: 0.02em;
  }
  .step-date { color: var(--emerald-600); }
- .step-status { color: var(--teal-600); }
- 
+  .step-status { color: var(--teal-600); }
+    .ini {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: var(--zinc-100);
+      color: var(--text-muted);
+      font-weight: 700;
+      border: 1px solid var(--zinc-200);
+      width: 48px;
+      height: 48px;
+      font-size: 16px;
+    }
  .step-reqs {
  display: flex;
  gap: 8px;

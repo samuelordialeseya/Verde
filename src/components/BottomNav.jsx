@@ -1,9 +1,9 @@
-const nav = ["Home", "Bounties", "Wallet", "Rankings", "Profile"];
+const nav = ["Home", "EcoMissions", "Wallet", "Rankings", "Profile"];
 
 function BottomNav({ active = "Home", onSelect }) {
   const icons = {
     Home: "⌂",
-    Bounties: "✓",
+    EcoMissions: "✓",
     Wallet: "▣",
     Rankings: "▥",
     Profile: "◦",
