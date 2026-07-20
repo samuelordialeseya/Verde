@@ -1,5 +1,10 @@
 <p align="center">
-  <img src="public/icons.svg" alt="Verde Logo" width="120" />
+  <img
+    src="public/brand-leaf.svg"
+    alt="Verde Logo"
+    width="72"
+    style="background:#ffffff;padding:24px;border-radius:16px;display:inline-block;"
+  />
 </p>
 
 <h1 align="center">Verde — AI-Powered Campus Sustainability & Rewards Platform</h1>
