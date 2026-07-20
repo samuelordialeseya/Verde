@@ -166,8 +166,8 @@ Verde/
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/samuelordialeseya/Verde-draft.git
-cd Verde-draft
+git clone https://github.com/samuelordialeseya/Verde.git
+cd Verde
 npm install
 cd functions && npm install && cd ..
 ```
@@ -349,7 +349,7 @@ Built by **Team Hakatun** during the CICS TechnoFusion Hackathon 2026.
 | Frontend & UI | Onikka Mae Buela |
 | Backend | Jairus Opinion |
 
-**Repository:** [github.com/samuelordialeseya/Verde-draft](https://github.com/samuelordialeseya/Verde-draft)
+**Repository:** [github.com/samuelordialeseya/Verde](https://github.com/samuelordialeseya/Verde)
 
 ---
 
