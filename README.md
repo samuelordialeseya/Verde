@@ -90,7 +90,7 @@ Verde's core mechanism: the barrier to participation is as low as possible (5 se
 ### AI Photo Verification
 
 - **Provider:** Google Cloud Vision API (label detection, object localization, OCR, safe search)
-- **Rule Engine:** Maps Vision signals to bounty-specific criteria from PRD
+- **Rule Engine:** Maps Vision signals to bounty-specific criteria
 - **Verdicts:**
   - `approved` — Evidence clearly visible, coins credited
   - `rejected` — Missing required elements, student can retake photo
